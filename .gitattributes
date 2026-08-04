@@ -1,0 +1,2 @@
+# Windows 批处理脚本必须使用 CRLF 换行，否则双击无法执行
+*.bat text eol=crlf
