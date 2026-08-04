@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# 密钥与本地配置
+.env
+.streamlit/secrets.toml
+
+# 运行时数据（本地报告）
+data/reports/*
+!data/reports/.gitkeep
+
+# 测试与工具缓存
+.pytest_cache/
+*.log
+.DS_Store
+.idea/
+.vscode/
