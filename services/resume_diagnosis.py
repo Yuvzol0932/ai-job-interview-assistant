@@ -28,15 +28,24 @@ def diagnose_resume(
         target_location,
         market_notes,
     )
-    try:
-        text = call_chat(client, messages, mock_builder=mock_diagnosis_response, on_token=on_token)
-    except LLMError as exc:
-        raise DiagnosisError(str(exc)) from exc
-
-    data = extract_json(text)
-    if not isinstance(data, dict):
-        raise DiagnosisError("AI 返回格式异常，请点击重试。")
-    try:
-        return DiagnosisResult.from_llm_json(data)
-    except Exception as exc:
-        raise DiagnosisError("诊断结果解析失败，请点击重试。") from exc
+    for attempt in range(2):
+        try:
+            text = call_chat(
+                client,
+                messages,
+                mock_builder=mock_diagnosis_response,
+                on_token=on_token,
+            )
+        except LLMError as exc:
+            if attempt == 1:
+                raise DiagnosisError(str(exc)) from exc
+            continue
+        data = extract_json(text)
+        if isinstance(data, dict):
+            try:
+                return DiagnosisResult.from_llm_json(data)
+            except Exception:
+                if attempt == 1:
+                    raise DiagnosisError("诊断结果解析失败，请点击重试。")
+                continue
+    raise DiagnosisError("AI 返回格式异常，请点击重试。")

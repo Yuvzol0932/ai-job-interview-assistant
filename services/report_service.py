@@ -28,15 +28,24 @@ def generate_report(
         state.answers,
         follow_ups=records,
     )
-    try:
-        text = call_chat(client, messages, mock_builder=mock_report_response, on_token=on_token)
-    except LLMError as exc:
-        raise ReportError(str(exc)) from exc
-
-    data = extract_json(text)
-    if not isinstance(data, dict):
-        raise ReportError("AI 返回格式异常，请点击重试。")
-    try:
-        return InterviewReport.from_llm_json(data, job_label=state.job_label)
-    except Exception as exc:
-        raise ReportError("报告解析失败，请点击重试。") from exc
+    for attempt in range(2):
+        try:
+            text = call_chat(
+                client,
+                messages,
+                mock_builder=mock_report_response,
+                on_token=on_token,
+            )
+        except LLMError as exc:
+            if attempt == 1:
+                raise ReportError(str(exc)) from exc
+            continue
+        data = extract_json(text)
+        if isinstance(data, dict):
+            try:
+                return InterviewReport.from_llm_json(data, job_label=state.job_label)
+            except Exception:
+                if attempt == 1:
+                    raise ReportError("报告解析失败，请点击重试。")
+                continue
+    raise ReportError("AI 返回格式异常，请点击重试。")

@@ -73,6 +73,7 @@ class LLMClient:
         if self.config.mock:
             return mock_builder(messages) if mock_builder else "（模拟模式：这是演示内容）"
         last_error = None
+        max_tokens = max_tokens or 8192
         for attempt in range(3):
             try:
                 response = self._openai.chat.completions.create(
@@ -102,6 +103,7 @@ class LLMClient:
             yield mock_builder(messages) if mock_builder else "（模拟模式：这是演示内容）"
             return
         last_error = None
+        max_tokens = max_tokens or 8192
         for attempt in range(3):
             try:
                 stream = self._openai.chat.completions.create(

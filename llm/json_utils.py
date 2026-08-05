@@ -10,6 +10,34 @@ def _try_parse(text: str):
         return None
 
 
+def _balanced_parse(text: str, start: int):
+    """从 { 或 [ 开始扫描括号平衡，返回第一个完整结构；失败返回 None。"""
+    open_char = text[start]
+    close_char = "}" if open_char == "{" else "]"
+    depth = 0
+    in_string = False
+    escaped = False
+    for index in range(start, len(text)):
+        char = text[index]
+        if in_string:
+            if escaped:
+                escaped = False
+            elif char == "\\":
+                escaped = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+        elif char == open_char:
+            depth += 1
+        elif char == close_char:
+            depth -= 1
+            if depth == 0:
+                return _try_parse(text[start : index + 1])
+    return None
+
+
 def extract_json(text: str):
     """从任意文本中提取第一个 JSON 对象或数组；失败返回 None。"""
     if not text:
@@ -24,22 +52,15 @@ def extract_json(text: str):
             if text.endswith("```"):
                 text = text[:-3].strip()
 
-    candidates = []
     first_brace = text.find("{")
     first_bracket = text.find("[")
-    if first_brace != -1:
-        candidates.append(text[first_brace:])
-    if first_bracket != -1:
-        candidates.append(text[first_bracket:])
-
-    for candidate in candidates:
-        parsed = _try_parse(candidate)
+    for start in (first_brace, first_bracket):
+        if start == -1:
+            continue
+        parsed = _try_parse(text[start:])
         if parsed is not None:
             return parsed
-        # 尝试截断到最后一个闭合符
-        last_close = max(candidate.rfind("}"), candidate.rfind("]"))
-        if last_close > 0:
-            parsed = _try_parse(candidate[: last_close + 1])
-            if parsed is not None:
-                return parsed
+        parsed = _balanced_parse(text, start)
+        if parsed is not None:
+            return parsed
     return None

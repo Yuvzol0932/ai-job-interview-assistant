@@ -73,18 +73,26 @@ def request_follow_up(client, state: InterviewState) -> None:
         state.questions[state.current_index],
         state.answers[state.current_index],
     )
-    try:
-        text = call_chat(client, messages, mock_builder=mock_follow_up_response)
-    except LLMError as exc:
-        raise InterviewError(str(exc)) from exc
-    data = extract_json(text)
-    question = ""
-    if isinstance(data, dict):
-        question = str(data.get("question", "")).strip()
-    if not question:
-        raise InterviewError("AI 追问生成失败，请点击重试。")
+    question = _generate_follow_up_question(client, messages)
     state.follow_up_questions[state.current_index] = question
     state.phase = "followup"
+
+
+def _generate_follow_up_question(client, messages: list[dict]) -> str:
+    """生成追问；模型偶发格式异常时自动重试一次。"""
+    for attempt in range(2):
+        try:
+            text = call_chat(client, messages, mock_builder=mock_follow_up_response)
+        except LLMError as exc:
+            if attempt == 1:
+                raise InterviewError(str(exc)) from exc
+            continue
+        data = extract_json(text)
+        if isinstance(data, dict):
+            question = str(data.get("question", "")).strip()
+            if question:
+                return question
+    raise InterviewError("AI 追问生成失败，请点击重试。")
 
 
 def submit_follow_up_answer(state: InterviewState, answer: str) -> None:

@@ -19,32 +19,37 @@ def generate_clarification_items(client, resume_text: str) -> list[Clarification
     if not resume_text.strip():
         raise ClarificationError("简历内容为空，请粘贴文本或上传文件。")
     messages = build_clarification_messages(resume_text)
-    try:
-        text = call_chat(client, messages, mock_builder=mock_clarification_response)
-    except LLMError as exc:
-        raise ClarificationError(str(exc)) from exc
-
-    data = extract_json(text)
-    if not isinstance(data, dict):
-        raise ClarificationError("AI 返回格式异常，请重试。")
-
-    items = []
-    for raw in data.get("items") or []:
-        if not isinstance(raw, dict):
+    for attempt in range(2):
+        try:
+            text = call_chat(client, messages, mock_builder=mock_clarification_response)
+        except LLMError as exc:
+            if attempt == 1:
+                raise ClarificationError(str(exc)) from exc
             continue
-        field = str(raw.get("field", "")).strip()
-        question = str(raw.get("question", "")).strip()
-        if field and question:
-            items.append(
-                ClarificationItem(
-                    field=field,
-                    question=question,
-                    hint=str(raw.get("hint", "")).strip(),
+        data = extract_json(text)
+        if not isinstance(data, dict):
+            if attempt == 1:
+                raise ClarificationError("AI 返回格式异常，请重试。")
+            continue
+        items = []
+        for raw in data.get("items") or []:
+            if not isinstance(raw, dict):
+                continue
+            field = str(raw.get("field", "")).strip()
+            question = str(raw.get("question", "")).strip()
+            if field and question:
+                items.append(
+                    ClarificationItem(
+                        field=field,
+                        question=question,
+                        hint=str(raw.get("hint", "")).strip(),
+                    )
                 )
-            )
-    if not items:
-        raise ClarificationError("AI 未识别出需要补充的信息，可直接开始诊断。")
-    return items
+        if items:
+            return items
+        if attempt == 1:
+            raise ClarificationError("AI 未识别出需要补充的信息，可直接开始诊断。")
+    raise ClarificationError("AI 返回格式异常，请重试。")
 
 
 def merge_profile(
