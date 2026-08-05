@@ -15,12 +15,19 @@ def diagnose_resume(
     client,
     resume: ResumeData,
     target_job: str | None = None,
+    target_location: str | None = None,
+    market_notes: str | None = None,
     on_token=None,
 ) -> DiagnosisResult:
     """执行简历诊断；on_token 用于流式展示。"""
     if resume.is_empty:
         raise DiagnosisError("简历内容为空，请粘贴文本或上传文件。")
-    messages = build_diagnosis_messages(resume.content, target_job)
+    messages = build_diagnosis_messages(
+        resume.content,
+        target_job,
+        target_location,
+        market_notes,
+    )
     try:
         text = call_chat(client, messages, mock_builder=mock_diagnosis_response, on_token=on_token)
     except LLMError as exc:
