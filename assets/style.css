@@ -1,0 +1,78 @@
+/* ===== AI 求职面试助手 全局样式 ===== */
+
+.stApp {
+    background-color: #F8FAFC;
+}
+
+html, body, [class*="css"] {
+    font-family: "PingFang SC", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
+    color: #0F172A;
+}
+
+h1, h2, h3 {
+    color: #0F172A;
+}
+
+/* 侧边栏 */
+[data-testid="stSidebar"] {
+    background-color: #FFFFFF;
+    border-right: 1px solid #E2E8F0;
+}
+
+[data-testid="stSidebar"] h1 {
+    color: #1E3A8A;
+    font-size: 1.15rem;
+}
+
+/* 主按钮 */
+.stButton > button[kind="primary"] {
+    background-color: #2563EB;
+    border: none;
+    border-radius: 10px;
+    font-weight: 600;
+}
+
+.stButton > button[kind="primary"]:hover {
+    background-color: #1D4ED8;
+}
+
+/* 卡片（st.container border=True） */
+[data-testid="stVerticalBlockBorderWrapper"] {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+}
+
+/* 进度条 */
+.stProgress > div > div > div {
+    background-color: #2563EB;
+}
+
+/* 指标卡 */
+[data-testid="stMetric"] {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 0.75rem;
+}
+
+[data-testid="stMetricValue"] {
+    color: #2563EB;
+}
+
+/* 提示框圆角 */
+[data-testid="stAlert"] {
+    border-radius: 12px;
+}
+
+/* 手机上让侧边栏更紧凑 */
+@media (max-width: 640px) {
+    [data-testid="stSidebar"] {
+        padding: 0.5rem;
+    }
+    h1 {
+        font-size: 1.5rem;
+    }
+}

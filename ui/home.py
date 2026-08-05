@@ -10,16 +10,24 @@ def render(client) -> None:
         "三步完成求职备战：诊断简历 → 模拟面试 → 查看报告。"
     )
 
+    metric1, metric2, metric3 = st.columns(3)
+    metric1.metric("求职闭环", "3 步")
+    metric2.metric("岗位方向", "7+ 类")
+    metric3.metric("面试评分", "5 维度")
+
     col1, col2, col3 = st.columns(3)
     with col1:
-        st.markdown("### ① 简历诊断")
-        st.markdown("粘贴或上传简历，AI 给出整体评价、优势、不足和优化示例。")
+        with st.container(border=True):
+            st.markdown("### ① 简历诊断")
+            st.markdown("粘贴或上传简历，AI 找出问题、补全缺失信息并给出优化示例。")
     with col2:
-        st.markdown("### ② 模拟面试")
-        st.markdown("选择岗位方向，AI 像真实面试官一样逐题提问。")
+        with st.container(border=True):
+            st.markdown("### ② 模拟面试")
+            st.markdown("选择岗位方向，AI 像真实面试官一样逐题提问、可追问细节。")
     with col3:
-        st.markdown("### ③ 面试报告")
-        st.markdown("五个维度打分 + 参考回答 + 提升建议，报告本地保存可回看。")
+        with st.container(border=True):
+            st.markdown("### ③ 面试报告")
+            st.markdown("五个维度打分 + 参考回答 + 提升建议，报告本地保存可回看。")
 
     st.divider()
     st.markdown("### 适合谁用")

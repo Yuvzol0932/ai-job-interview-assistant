@@ -3,5 +3,13 @@ port = 8501
 address = "127.0.0.1"
 headless = false
 
+[theme]
+base = "light"
+primaryColor = "#2563EB"
+backgroundColor = "#F8FAFC"
+secondaryBackgroundColor = "#FFFFFF"
+textColor = "#0F172A"
+font = "sans serif"
+
 [browser]
 gatherUsageStats = false

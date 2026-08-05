@@ -32,9 +32,8 @@ def render(client) -> None:
 
 def _render_report(report) -> None:
     st.metric("总分", f"{report.total_score} / 100")
-    columns = st.columns(len(report.dimensions))
-    for column, (name, score) in zip(columns, report.dimensions.items()):
-        column.metric(name, f"{score} / 10")
+    for name, score in report.dimensions.items():
+        st.progress(score / 10, text=f"{name}：{score} / 10")
 
     st.subheader("✅ 亮点")
     for item in report.strengths:
