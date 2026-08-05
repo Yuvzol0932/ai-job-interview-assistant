@@ -32,8 +32,10 @@ class FakeClient:
 
     def __init__(self, text: str = REPORT_JSON):
         self.text = text
+        self.last_messages = None
 
     def chat(self, messages, **kwargs):
+        self.last_messages = messages
         return self.text
 
     def chat_stream(self, messages, **kwargs):
@@ -86,3 +88,21 @@ def test_generate_report_not_finished():
     )
     with pytest.raises(ReportError):
         generate_report(FakeClient(), state)
+
+
+def test_report_includes_follow_up():
+    state = InterviewState(
+        job_label="产品经理",
+        questions=["q1"],
+        answers=["a1"],
+        follow_up_questions=["追问：具体怎么做的？"],
+        follow_up_answers=["追问回答"],
+        status="finished",
+        phase="done",
+    )
+    client = FakeClient()
+    report = generate_report(client, state)
+    assert report.total_score == 74
+    content = client.last_messages[-1]["content"]
+    assert "面试官追问" in content
+    assert "追问回答" in content
