@@ -5,10 +5,10 @@ headless = false
 
 [theme]
 base = "light"
-primaryColor = "#2563EB"
-backgroundColor = "#F8FAFC"
+primaryColor = "#0E7C7B"
+backgroundColor = "#F5F7FA"
 secondaryBackgroundColor = "#FFFFFF"
-textColor = "#0F172A"
+textColor = "#16233D"
 font = "sans serif"
 
 [browser]

@@ -1,78 +1,250 @@
-/* ===== AI 求职面试助手 全局样式 ===== */
+/* ============================================
+   AI 求职面试助手 · 面试练习室视觉系统
+   深墨蓝 + 青绿主色 + 琥珀点缀，克制留白
+   ============================================ */
 
-.stApp {
-    background-color: #F8FAFC;
+:root {
+    --ink: #16233D;
+    --teal: #0E7C7B;
+    --teal-dark: #0A5F5E;
+    --amber: #E8A33D;
+    --paper: #F5F7FA;
+    --card: #FFFFFF;
+    --muted: #5B6472;
+    --line: #E3E8EF;
+    --hand: "KaiTi", "STKaiti", "楷体", serif;
 }
 
 html, body, [class*="css"] {
     font-family: "PingFang SC", "Microsoft YaHei", -apple-system, "Segoe UI", sans-serif;
-    color: #0F172A;
+    color: var(--ink);
+}
+
+.stApp {
+    background: linear-gradient(180deg, #FBFCFE 0%, var(--paper) 100%);
 }
 
 h1, h2, h3 {
-    color: #0F172A;
+    color: var(--ink);
 }
 
-/* 侧边栏 */
+h1 {
+    font-weight: 800;
+    letter-spacing: -0.02em;
+}
+
+h2 {
+    font-weight: 700;
+    letter-spacing: -0.01em;
+}
+
+/* ---------- 首页 Hero ---------- */
+
+.hero {
+    padding: 1.2rem 0 0.6rem;
+    animation: hero-in 0.5s ease-out both;
+}
+
+.hero-eyebrow {
+    font-size: 0.82rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    color: var(--teal);
+    margin: 0 0 0.4rem;
+    text-transform: uppercase;
+}
+
+.hero-title {
+    font-size: clamp(1.6rem, 3vw, 2.4rem);
+    font-weight: 800;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+    margin: 0 0 0.5rem;
+}
+
+.hero-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    margin: 0;
+}
+
+@keyframes hero-in {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---------- 侧边栏 ---------- */
+
 [data-testid="stSidebar"] {
-    background-color: #FFFFFF;
-    border-right: 1px solid #E2E8F0;
+    background-color: var(--card);
+    border-right: 1px solid var(--line);
 }
 
 [data-testid="stSidebar"] h1 {
-    color: #1E3A8A;
-    font-size: 1.15rem;
+    color: var(--teal-dark);
+    font-size: 1.1rem;
+    letter-spacing: -0.01em;
 }
 
-/* 主按钮 */
-.stButton > button[kind="primary"] {
-    background-color: #2563EB;
-    border: none;
+/* ---------- 按钮 ---------- */
+
+.stButton > button {
     border-radius: 10px;
     font-weight: 600;
+    transition: transform 0.12s ease, box-shadow 0.12s ease, background-color 0.12s ease;
+}
+
+.stButton > button[kind="primary"] {
+    background-color: var(--teal);
+    border: none;
 }
 
 .stButton > button[kind="primary"]:hover {
-    background-color: #1D4ED8;
+    background-color: var(--teal-dark);
+    box-shadow: 0 4px 14px rgba(14, 124, 123, 0.25);
+    transform: translateY(-1px);
 }
 
-/* 卡片（st.container border=True） */
+.stButton > button:focus-visible,
+.stTextInput input:focus-visible,
+.stTextArea textarea:focus-visible {
+    outline: 2px solid var(--amber);
+    outline-offset: 1px;
+}
+
+/* ---------- 卡片与面板 ---------- */
+
 [data-testid="stVerticalBlockBorderWrapper"] {
-    background-color: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 14px;
-    padding: 1rem;
-    box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+    background-color: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 1.1rem 1.2rem;
+    box-shadow: 0 1px 4px rgba(22, 35, 61, 0.05);
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-/* 进度条 */
-.stProgress > div > div > div {
-    background-color: #2563EB;
+[data-testid="stVerticalBlockBorderWrapper"]:hover {
+    box-shadow: 0 6px 18px rgba(22, 35, 61, 0.08);
 }
 
-/* 指标卡 */
 [data-testid="stMetric"] {
-    background-color: #FFFFFF;
-    border: 1px solid #E2E8F0;
-    border-radius: 12px;
-    padding: 0.75rem;
+    background-color: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 0.8rem 1rem;
 }
 
 [data-testid="stMetricValue"] {
-    color: #2563EB;
+    color: var(--teal-dark);
+    font-weight: 700;
 }
 
-/* 提示框圆角 */
 [data-testid="stAlert"] {
     border-radius: 12px;
 }
 
-/* 手机上让侧边栏更紧凑 */
+/* ---------- 进度条 ---------- */
+
+.stProgress > div > div > div {
+    background-color: var(--teal);
+    border-radius: 999px;
+}
+
+/* ---------- 思考动画条 ---------- */
+
+.thinking-wrap {
+    padding: 0.8rem 0 1.4rem;
+}
+
+.thinking-label {
+    font-family: var(--hand);
+    font-size: 1.05rem;
+    color: var(--teal-dark);
+    margin-bottom: 0.5rem;
+}
+
+.thinking-bar {
+    height: 6px;
+    border-radius: 999px;
+    background: linear-gradient(90deg, var(--teal), var(--amber), var(--teal));
+    background-size: 200% 100%;
+    animation: thinking-shimmer 1.3s linear infinite;
+}
+
+@keyframes thinking-shimmer {
+    0% { background-position: 0% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* ---------- 面试官手记（报告） ---------- */
+
+.hand-note {
+    font-family: var(--hand);
+    font-size: 1.06rem;
+    line-height: 1.9;
+    color: var(--ink);
+    background: #FFFDF7;
+    border-left: 3px solid var(--amber);
+    border-radius: 0 14px 14px 0;
+    padding: 1rem 1.2rem;
+    margin: 0.6rem 0 1.2rem;
+}
+
+.hand-heading {
+    font-family: var(--hand);
+    font-size: 1.3rem;
+    color: var(--teal-dark);
+    border-bottom: 1px dashed var(--line);
+    padding-bottom: 0.4rem;
+    margin: 1.6rem 0 0.8rem;
+}
+
+.hand-quote {
+    font-family: var(--hand);
+    color: var(--amber);
+}
+
+/* ---------- 历史记录 ---------- */
+
+.history-card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 0.7rem 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.history-title {
+    font-weight: 700;
+    color: var(--ink);
+}
+
+.history-meta {
+    font-size: 0.82rem;
+    color: var(--muted);
+}
+
+/* ---------- 移动端 ---------- */
+
 @media (max-width: 640px) {
     [data-testid="stSidebar"] {
         padding: 0.5rem;
     }
-    h1 {
-        font-size: 1.5rem;
+    .hero-title {
+        font-size: 1.45rem;
+    }
+}
+
+/* ---------- 减少动态效果 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+    .hero {
+        animation: none;
+    }
+    .thinking-bar {
+        animation: none;
+    }
+    .stButton > button {
+        transition: none;
     }
 }

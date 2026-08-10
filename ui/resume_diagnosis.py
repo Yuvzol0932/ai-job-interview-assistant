@@ -1,5 +1,7 @@
 """简历诊断页：上传 → AI 询问缺失信息 → 生成专属优化方案。"""
 
+import time
+
 import streamlit as st
 
 from models.resume import ResumeData
@@ -10,6 +12,7 @@ from services.resume_clarification import (
 )
 from services.resume_diagnosis import DiagnosisError, diagnose_resume
 from services.resume_parser import ResumeParseError, parse_resume_file, parse_resume_text
+from ui._widgets import render_thinking
 
 _DIAG_KEYS = [
     "diag_resume",
@@ -40,27 +43,76 @@ def _reset() -> None:
 
 
 def _render_upload(client) -> None:
-    with st.form("resume_upload"):
-        source = st.radio("简历来源", ["粘贴文本", "上传文件"], horizontal=True)
-        if source == "粘贴文本":
-            text = st.text_area("简历内容", height=240, placeholder="把简历全文粘贴到这里…")
-            uploaded = None
-        else:
-            text = ""
-            uploaded = st.file_uploader("上传简历（支持 PDF 或 Word .docx）", type=["pdf", "docx"])
-        target_job = st.text_input("目标岗位（选填）", placeholder="例如：产品经理、市场营销…")
-        target_location = st.text_input("期望工作地点（选填）", placeholder="例如：青岛、杭州…")
-        market_notes = st.text_area(
-            "当地市场补充说明（选填）",
-            height=80,
-            placeholder="例如：了解到本地该岗位普遍要求会数据分析…",
+    # 注意：选项放在表单外，切换“粘贴文本/上传文件”时页面会立即刷新，
+    # 对应的输入框才能正确显示。
+    source = st.radio("简历来源", ["粘贴文本", "上传文件"], horizontal=True, key="diag_source")
+    if source == "粘贴文本":
+        text = st.text_area(
+            "简历内容",
+            height=240,
+            key="diag_text",
+            placeholder="把简历全文粘贴到这里…",
         )
-        analyze = st.form_submit_button("分析简历缺失信息", type="primary")
-        skip = st.form_submit_button("跳过询问，直接诊断")
+        uploaded = None
+    else:
+        text = ""
+        uploaded = st.file_uploader(
+            "上传简历（支持 PDF 或 Word .docx）",
+            type=["pdf", "docx"],
+            key="diag_uploaded",
+        )
+    target_job = st.text_input(
+        "目标岗位（选填）",
+        key="diag_job",
+        placeholder="例如：产品经理、市场营销…",
+    )
+    target_location = st.text_input(
+        "期望工作地点（选填）",
+        key="diag_location",
+        placeholder="例如：青岛、杭州…",
+    )
+    market_notes = st.text_area(
+        "当地市场补充说明（选填）",
+        height=80,
+        key="diag_market",
+        placeholder="例如：了解到本地该岗位普遍要求会数据分析…",
+    )
 
-    if not (analyze or skip):
-        return
+    col1, col2 = st.columns(2)
+    if col1.button("分析简历缺失信息", type="primary"):
+        _handle_upload(
+            client,
+            source,
+            text,
+            uploaded,
+            target_job,
+            target_location,
+            market_notes,
+            skip=False,
+        )
+    if col2.button("跳过询问，直接诊断"):
+        _handle_upload(
+            client,
+            source,
+            text,
+            uploaded,
+            target_job,
+            target_location,
+            market_notes,
+            skip=True,
+        )
 
+
+def _handle_upload(
+    client,
+    source: str,
+    text: str,
+    uploaded,
+    target_job: str,
+    target_location: str,
+    market_notes: str,
+    skip: bool,
+) -> None:
     try:
         if source == "粘贴文本":
             resume = parse_resume_text(text)
@@ -145,23 +197,18 @@ def _run_diagnosis(client) -> None:
         filename=resume.filename,
     )
     try:
-        with st.status("AI 正在生成专属优化方案…", expanded=True) as status:
-            box = st.empty()
-            parts = []
-
-            def on_token(token: str) -> None:
-                parts.append(token)
-                box.markdown("".join(parts))
-
+        with st.status("正在整理你的简历与补充信息…", expanded=True) as status:
+            render_thinking("正在逐项对照岗位要求…")
+            time.sleep(0.5)
+            status.update(label="AI 正在生成专属优化方案…")
             result = diagnose_resume(
                 client,
                 merged,
                 target_job=st.session_state.get("diag_target_job", ""),
                 target_location=st.session_state.get("diag_target_location", ""),
                 market_notes=market_notes,
-                on_token=on_token,
             )
-        status.update(label="优化方案生成完成", state="complete", expanded=False)
+        status.update(label="优化方案已就绪", state="complete", expanded=False)
         st.session_state["diag_result"] = result
         st.session_state["diag_done"] = True
         st.rerun()

@@ -4,10 +4,15 @@ import streamlit as st
 
 
 def render(client) -> None:
-    st.title("🎯 AI 求职面试助手")
     st.markdown(
-        "面向校园求职场景的智能应用，帮你**投递前发现问题、面试前实战练习**。"
-        "三步完成求职备战：诊断简历 → 模拟面试 → 查看报告。"
+        """
+        <div class="hero">
+            <p class="hero-eyebrow">校园求职 · 面试练习室</p>
+            <h1 class="hero-title">把每一次练习，都变成下一次面试的底气。</h1>
+            <p class="hero-sub">三步走完求职备战：诊断简历 → 模拟面试 → 拿到面试官手记。</p>
+        </div>
+        """,
+        unsafe_allow_html=True,
     )
 
     metric1, metric2, metric3 = st.columns(3)
@@ -19,15 +24,15 @@ def render(client) -> None:
     with col1:
         with st.container(border=True):
             st.markdown("### ① 简历诊断")
-            st.markdown("粘贴或上传简历，AI 找出问题、补全缺失信息并给出优化示例。")
+            st.markdown("上传或粘贴简历，AI 先问清缺失信息，再给出专属优化方案。")
     with col2:
         with st.container(border=True):
             st.markdown("### ② 模拟面试")
-            st.markdown("选择岗位方向，AI 像真实面试官一样逐题提问、可追问细节。")
+            st.markdown("选择岗位方向，AI 像真实面试官一样逐题提问，还会追问细节。")
     with col3:
         with st.container(border=True):
-            st.markdown("### ③ 面试报告")
-            st.markdown("五个维度打分 + 参考回答 + 提升建议，报告本地保存可回看。")
+            st.markdown("### ③ 面试复盘")
+            st.markdown("以面试官手记的形式，给出点评、建议和下一步行动。")
 
     st.divider()
     st.markdown("### 适合谁用")

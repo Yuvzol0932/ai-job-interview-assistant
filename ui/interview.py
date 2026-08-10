@@ -1,5 +1,7 @@
 """模拟面试页：逐题问答 + 追问机制。"""
 
+import time
+
 import streamlit as st
 
 from services.interview_service import (
@@ -14,6 +16,7 @@ from services.interview_service import (
 from services.job_catalog import CUSTOM_LABEL, job_labels
 from services.report_service import ReportError, generate_report
 from services.report_store import save_report
+from ui._widgets import render_thinking
 
 
 def render(client) -> None:
@@ -161,22 +164,20 @@ def _render_finished(client, state) -> None:
         f"岗位：{state.job_label}，共 {state.total} 题，回答 {state.answered_count} 题。"
     )
 
-    if st.button("生成面试报告", type="primary"):
+    if st.button("生成面试复盘", type="primary"):
         try:
-            with st.status("AI 正在评估你的面试表现…", expanded=True) as status:
-                box = st.empty()
-                parts = []
-
-                def on_token(token: str) -> None:
-                    parts.append(token)
-                    box.markdown("".join(parts))
-
-                report = generate_report(client, state, on_token=on_token)
-            status.update(label="报告生成完成", state="complete", expanded=False)
+            with st.status("正在整理这场面试…", expanded=True) as status:
+                render_thinking("面试官正在翻看你的回答…")
+                time.sleep(0.6)
+                status.update(label="正在逐题点评…")
+                time.sleep(0.6)
+                status.update(label="正在写面试官手记…")
+                report = generate_report(client, state)
+            status.update(label="手记写好了", state="complete", expanded=False)
             save_report(report)
             st.session_state["current_report"] = report
             st.session_state.pop("interview_state", None)
-            st.success("报告已生成并保存到本地，可在「面试报告」页查看。")
+            st.success("复盘已生成并保存到本地，可在「面试复盘」页查看。")
             st.rerun()
         except ReportError as exc:
             st.error(str(exc))

@@ -33,7 +33,7 @@ with st.sidebar:
         st.warning("当前为模拟演示模式（未配置 API 密钥），结果均为演示数据。")
     else:
         st.success(f"已连接真实模型：{client.config.provider} / {client.config.model}")
-    page = st.radio("功能导航", ["首页", "简历诊断", "模拟面试", "面试报告"])
+    page = st.radio("功能导航", ["首页", "简历诊断", "模拟面试", "面试复盘"])
 
 if page == "首页":
     home.render(client)
