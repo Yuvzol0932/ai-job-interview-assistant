@@ -54,3 +54,15 @@ def load_report(report_id: str) -> InterviewReport | None:
         return InterviewReport.from_dict(data)
     except (json.JSONDecodeError, OSError, ValueError, KeyError):
         return None
+
+
+def delete_report(report_id: str) -> bool:
+    """删除本地报告；成功返回 True。"""
+    path = REPORT_DIR / f"{report_id}.json"
+    if not path.exists():
+        return False
+    try:
+        path.unlink()
+        return True
+    except OSError:
+        return False

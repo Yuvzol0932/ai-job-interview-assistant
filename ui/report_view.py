@@ -1,57 +1,76 @@
-"""面试报告页。"""
+"""面试复盘页：面试官手记 + 历史记录。"""
 
 import streamlit as st
 
-from services.report_store import list_reports, load_report
+from services.report_store import delete_report, list_reports, load_report
 
 
 def render(client) -> None:
-    st.title("📊 面试报告")
+    st.title("📝 面试复盘")
+
     current = st.session_state.get("current_report")
     if current is not None:
-        st.subheader("本次面试报告")
-        _render_report(current)
+        st.caption(f"{current.job_label} · {current.created_at} · 本次复盘")
+        _render_handnote(current)
+        st.divider()
 
     reports = list_reports()
-    if reports:
-        st.divider()
-        options = {
-            f"{item['created_at']} ｜ {item['job_label']} ｜ {item['total_score']} 分": item[
-                "report_id"
-            ]
-            for item in reports
-        }
-        choice = st.selectbox("历史报告", list(options))
-        loaded = load_report(options[choice])
-        if loaded is not None:
-            st.subheader("历史报告")
-            _render_report(loaded)
-    else:
-        st.info("完成一次模拟面试并生成报告后，报告会显示在这里。")
+    if not reports:
+        st.info("完成一次模拟面试并生成复盘后，这里会出现你的历史记录。")
+        return
+
+    st.markdown('<div class="hand-heading">历史复盘</div>', unsafe_allow_html=True)
+    for item in reports:
+        with st.container(border=True):
+            col1, col2, col3 = st.columns([3, 1, 1])
+            col1.markdown(f"**{item['job_label']}**")
+            col1.caption(f"{item['created_at']} · 总分 {item['total_score']} / 100")
+            if col2.button("查看", key=f"view_{item['report_id']}"):
+                st.session_state["viewing_report_id"] = item["report_id"]
+            if col3.button("删除", key=f"del_{item['report_id']}"):
+                delete_report(item["report_id"])
+                if st.session_state.get("viewing_report_id") == item["report_id"]:
+                    st.session_state.pop("viewing_report_id", None)
+                st.rerun()
+
+    viewing_id = st.session_state.get("viewing_report_id")
+    if viewing_id:
+        viewing = load_report(viewing_id)
+        if viewing is None:
+            st.session_state.pop("viewing_report_id", None)
+        else:
+            st.markdown('<div class="hand-heading">这份复盘</div>', unsafe_allow_html=True)
+            _render_handnote(viewing)
 
 
-def _render_report(report) -> None:
-    st.metric("总分", f"{report.total_score} / 100")
-    for name, score in report.dimensions.items():
-        st.progress(score / 10, text=f"{name}：{score} / 10")
+def _render_handnote(report) -> None:
+    if not report.overall_impression and not report.question_comments:
+        st.info("这份较早的复盘格式不兼容新版本，建议重新生成一份。")
 
-    st.subheader("✅ 亮点")
-    for item in report.strengths:
-        st.markdown(f"- {item}")
+    if report.overall_impression:
+        st.markdown(
+            f'<div class="hand-note">这轮面试看下来，我的第一印象是——{report.overall_impression}</div>',
+            unsafe_allow_html=True,
+        )
 
-    st.subheader("⚠️ 短板")
-    for item in report.weaknesses:
-        st.markdown(f"- {item}")
+    col1, col2 = st.columns([1, 3])
+    col1.metric("总分", f"{report.total_score} / 100")
+    with col2:
+        st.caption("五维表现")
+        for name, score in report.dimensions.items():
+            st.progress(score / 10, text=f"{name} {score}/10")
 
-    st.subheader("📈 提升建议")
-    for item in report.suggestions:
-        st.markdown(f"- {item}")
+    if report.question_comments:
+        st.markdown('<div class="hand-heading">逐题点评</div>', unsafe_allow_html=True)
+        for index, item in enumerate(report.question_comments, start=1):
+            with st.container(border=True):
+                st.markdown(f"**第 {index} 题：{item.get('question', '')}**")
+                st.markdown(item.get("comment", ""))
 
-    st.subheader("💡 参考答案")
-    if not report.reference_answers:
-        st.caption("本次报告未生成参考答案。")
-    for index, item in enumerate(report.reference_answers, start=1):
-        question = item.get("question", "")
-        title = f"第 {index} 题" + (f"：{question[:36]}" if question else "")
-        with st.expander(title):
-            st.markdown(item.get("answer", "（无）"))
+    if report.growth_advice:
+        st.markdown('<div class="hand-heading">接下来可以这样练</div>', unsafe_allow_html=True)
+        for index, item in enumerate(report.growth_advice, start=1):
+            st.markdown(f"{index}. {item}")
+
+    if report.closing:
+        st.markdown(f'<div class="hand-note">{report.closing}</div>', unsafe_allow_html=True)

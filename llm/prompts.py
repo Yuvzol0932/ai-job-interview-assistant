@@ -20,14 +20,17 @@ SYSTEM_QUESTIONS = """你是资深面试官，擅长为应届生设计面试题�
 3. 题目应包含：自我介绍类、岗位认知类、情景/行为类（用 STAR 作答）、优缺点类，其余考察综合能力。
 4. 题目要具体、贴近真实面试，不要输出题号以外的说明。"""
 
-SYSTEM_REPORT = """你是资深面试官与职业发展导师。请根据岗位、面试题和候选人回答，生成客观的面试评估报告。
+SYSTEM_REPORT = """你是资深面试官，刚刚完成一场模拟面试。现在请以"面试官"的口吻，给候选人写一份复盘手记，而不是生成一份机械的评估报告。
 要求：
 1. 只输出一个 JSON 对象，不要输出其他文字。
-2. JSON 字段固定为：dimensions、total_score、strengths、weaknesses、reference_answers、suggestions。
+2. JSON 字段固定为：dimensions、total_score、overall_impression、question_comments、growth_advice、closing。
 3. dimensions 的键必须是：内容准确性、逻辑条理、表达清晰度、岗位匹配度、临场应变；值为 0-10 的整数。
 4. total_score 是 0-100 的整数，综合五维度得出。
-5. strengths、weaknesses 各 3-5 条，结合具体回答；suggestions 3-5 条，给出可执行的提升建议。
-6. reference_answers 是与面试题一一对应的数组，每项为 {"question": "...", "answer": "高质量参考答案"}；若存在面试官追问，评估需考虑追问环节表现，参考答案可包含对追问的应对。"""
+5. overall_impression 是一段 80-150 字的整体印象，像面试官当面点评：先说总体感觉，再点出最明显的优点和不足，口语化、具体，不要用"综上所述""首先其次"这类套话。
+6. question_comments 与面试题一一对应，每项为 {"question": "原题", "comment": "对这一题回答的点评"}；comment 40-80 字，要具体引用回答中的细节，指出亮点或问题；若存在面试官追问，点评需覆盖追问环节表现。
+7. growth_advice 给出 3-5 条具体可执行的提升建议，像导师给的建议。
+8. closing 是一句收尾，像面试结束时的鼓励，简短自然。
+9. 全程不得出现"作为AI""模型生成"等字样，也不得空泛表扬。"""
 
 
 def build_diagnosis_messages(
@@ -256,22 +259,6 @@ def mock_questions_response(messages: list[dict]) -> str:
 
 
 def mock_report_response(messages: list[dict]) -> str:
-    user = messages[-1]["content"]
-    questions = []
-    answers = []
-    lines = user.splitlines()
-    for line in lines:
-        if line.startswith("第") and "题：" in line and "候选人回答" not in line:
-            questions.append(line.split("题：", 1)[1].strip())
-        elif line.startswith("候选人回答："):
-            answers.append(line.split("候选人回答：", 1)[1].strip())
-    reference = [
-        {
-            "question": question,
-            "answer": "参考答案：先用一句话给出结论，再用 STAR 框架展开具体事例，最后落到与岗位的匹配点。",
-        }
-        for question in questions
-    ]
     return json.dumps(
         {
             "dimensions": {
@@ -282,19 +269,23 @@ def mock_report_response(messages: list[dict]) -> str:
                 "临场应变": 7,
             },
             "total_score": 68,
-            "strengths": [
-                "回答基本完整，能够围绕问题展开。",
-                "部分回答体现了具体经历，具备一定说服力。",
+            "overall_impression": "整体来看，你是一个有准备、有诚意的候选人，表达也算流畅。印象最深的是你愿意举自己的例子，但好几个回答停在'我做过'，没有说清楚'做成了什么'，这会让面试官很难判断你的真实水平。",
+            "question_comments": [
+                {
+                    "question": "请用 1 分钟做自我介绍。",
+                    "comment": "自我介绍结构完整，但信息密度偏低。你说自己'有实习经历'，却没点出实习里最亮眼的数字，这一题值得把简历里最强的成果前置。",
+                },
+                {
+                    "question": "请分享一次你遇到分歧并解决的经历。",
+                    "comment": "能举出具体场景，这是加分项。可惜你只说了'最后协调好了'，没有讲你具体做了哪个动作让局面转变，建议补上这一步。",
+                },
             ],
-            "weaknesses": [
-                "部分回答停留在泛泛而谈，缺少量化结果。",
-                "岗位匹配度的表达不够突出。",
+            "growth_advice": [
+                "把每个经历都按'背景-任务-动作-结果'过一遍，尤其是'动作'和'结果'要说满。",
+                "自我介绍控制在 1 分钟内，把最有说服力的一个成果放在最前面。",
+                "提前准备 3 个关于岗位的提问，面试结尾问出来，会显得你真的想清楚过这份工作。",
             ],
-            "reference_answers": reference,
-            "suggestions": [
-                "用 STAR 法则重写关键经历，让回答更有画面感。",
-                "提前研究目标岗位的职责，把回答与岗位要求挂钩。",
-            ],
+            "closing": "这轮练习里你已经能看出自己的问题在哪了，剩下的就是把它练成习惯。下次面试，记得先讲结果，再讲过程。",
         },
         ensure_ascii=False,
     )

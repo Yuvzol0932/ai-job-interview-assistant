@@ -11,17 +11,17 @@ DIMENSIONS = ["内容准确性", "逻辑条理", "表达清晰度", "岗位匹�
 
 @dataclass
 class InterviewReport:
-    """面试报告（契约）。"""
+    """面试复盘手记（契约）。"""
 
     report_id: str = ""
     created_at: str = ""
     job_label: str = ""
     dimensions: dict[str, int] = field(default_factory=dict)
     total_score: int = 0
-    strengths: list[str] = field(default_factory=list)
-    weaknesses: list[str] = field(default_factory=list)
-    reference_answers: list[dict] = field(default_factory=list)
-    suggestions: list[str] = field(default_factory=list)
+    overall_impression: str = ""
+    question_comments: list[dict] = field(default_factory=list)
+    growth_advice: list[str] = field(default_factory=list)
+    closing: str = ""
 
     @classmethod
     def from_llm_json(cls, data: dict, job_label: str = "") -> "InterviewReport":
@@ -39,13 +39,13 @@ class InterviewReport:
         except (TypeError, ValueError):
             total_score = 0
 
-        reference_answers = []
-        for item in data.get("reference_answers") or []:
+        question_comments = []
+        for item in data.get("question_comments") or []:
             if isinstance(item, dict):
-                reference_answers.append(
+                question_comments.append(
                     {
                         "question": str(item.get("question", "")).strip(),
-                        "answer": str(item.get("answer", "")).strip(),
+                        "comment": str(item.get("comment", "")).strip(),
                     }
                 )
 
@@ -55,10 +55,10 @@ class InterviewReport:
             job_label=job_label or str(data.get("job_label", "")),
             dimensions=dimensions,
             total_score=total_score,
-            strengths=str_list(data.get("strengths")),
-            weaknesses=str_list(data.get("weaknesses")),
-            reference_answers=reference_answers,
-            suggestions=str_list(data.get("suggestions")),
+            overall_impression=str(data.get("overall_impression", "")).strip(),
+            question_comments=question_comments,
+            growth_advice=str_list(data.get("growth_advice")),
+            closing=str(data.get("closing", "")).strip(),
         )
 
     def to_dict(self) -> dict:
@@ -68,10 +68,10 @@ class InterviewReport:
             "job_label": self.job_label,
             "dimensions": self.dimensions,
             "total_score": self.total_score,
-            "strengths": self.strengths,
-            "weaknesses": self.weaknesses,
-            "reference_answers": self.reference_answers,
-            "suggestions": self.suggestions,
+            "overall_impression": self.overall_impression,
+            "question_comments": self.question_comments,
+            "growth_advice": self.growth_advice,
+            "closing": self.closing,
         }
 
     @classmethod
@@ -82,15 +82,15 @@ class InterviewReport:
             job_label=str(data.get("job_label", "")),
             dimensions={str(k): int(v) for k, v in (data.get("dimensions") or {}).items()},
             total_score=int(data.get("total_score", 0)),
-            strengths=str_list(data.get("strengths")),
-            weaknesses=str_list(data.get("weaknesses")),
-            reference_answers=[
+            overall_impression=str(data.get("overall_impression", "")),
+            question_comments=[
                 {
                     "question": str(item.get("question", "")),
-                    "answer": str(item.get("answer", "")),
+                    "comment": str(item.get("comment", "")),
                 }
-                for item in (data.get("reference_answers") or [])
+                for item in (data.get("question_comments") or [])
                 if isinstance(item, dict)
             ],
-            suggestions=str_list(data.get("suggestions")),
+            growth_advice=str_list(data.get("growth_advice")),
+            closing=str(data.get("closing", "")),
         )
