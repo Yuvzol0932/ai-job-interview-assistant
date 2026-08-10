@@ -19,3 +19,7 @@ data/reports/*
 .DS_Store
 .idea/
 .vscode/
+
+# React 前端
+web/node_modules/
+web/dist/
