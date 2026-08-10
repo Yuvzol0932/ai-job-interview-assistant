@@ -19,7 +19,7 @@ def render(client) -> None:
         st.info("完成一次模拟面试并生成复盘后，这里会出现你的历史记录。")
         return
 
-    st.markdown('<div class="hand-heading">历史复盘</div>', unsafe_allow_html=True)
+    st.subheader("历史复盘")
     for item in reports:
         with st.container(border=True):
             col1, col2, col3 = st.columns([3, 1, 1])
@@ -39,7 +39,7 @@ def render(client) -> None:
         if viewing is None:
             st.session_state.pop("viewing_report_id", None)
         else:
-            st.markdown('<div class="hand-heading">这份复盘</div>', unsafe_allow_html=True)
+            st.subheader("这份复盘")
             _render_handnote(viewing)
 
 
@@ -48,10 +48,7 @@ def _render_handnote(report) -> None:
         st.info("这份较早的复盘格式不兼容新版本，建议重新生成一份。")
 
     if report.overall_impression:
-        st.markdown(
-            f'<div class="hand-note">这轮面试看下来，我的第一印象是——{report.overall_impression}</div>',
-            unsafe_allow_html=True,
-        )
+        st.markdown(f"> 这轮面试看下来，我的第一印象是——{report.overall_impression}")
 
     col1, col2 = st.columns([1, 3])
     col1.metric("总分", f"{report.total_score} / 100")
@@ -61,16 +58,16 @@ def _render_handnote(report) -> None:
             st.progress(score / 10, text=f"{name} {score}/10")
 
     if report.question_comments:
-        st.markdown('<div class="hand-heading">逐题点评</div>', unsafe_allow_html=True)
+        st.subheader("逐题点评")
         for index, item in enumerate(report.question_comments, start=1):
             with st.container(border=True):
                 st.markdown(f"**第 {index} 题：{item.get('question', '')}**")
                 st.markdown(item.get("comment", ""))
 
     if report.growth_advice:
-        st.markdown('<div class="hand-heading">接下来可以这样练</div>', unsafe_allow_html=True)
+        st.subheader("接下来可以这样练")
         for index, item in enumerate(report.growth_advice, start=1):
             st.markdown(f"{index}. {item}")
 
     if report.closing:
-        st.markdown(f'<div class="hand-note">{report.closing}</div>', unsafe_allow_html=True)
+        st.markdown(f"> {report.closing}")

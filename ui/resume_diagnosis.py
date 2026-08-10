@@ -12,7 +12,6 @@ from services.resume_clarification import (
 )
 from services.resume_diagnosis import DiagnosisError, diagnose_resume
 from services.resume_parser import ResumeParseError, parse_resume_file, parse_resume_text
-from ui._widgets import render_thinking
 
 _DIAG_KEYS = [
     "diag_resume",
@@ -198,9 +197,9 @@ def _run_diagnosis(client) -> None:
     )
     try:
         with st.status("正在整理你的简历与补充信息…", expanded=True) as status:
-            render_thinking("正在逐项对照岗位要求…")
+            bar = st.progress(0.1, text="正在逐项对照岗位要求…")
             time.sleep(0.5)
-            status.update(label="AI 正在生成专属优化方案…")
+            bar.progress(0.5, text="AI 正在生成专属优化方案…")
             result = diagnose_resume(
                 client,
                 merged,
@@ -208,6 +207,7 @@ def _run_diagnosis(client) -> None:
                 target_location=st.session_state.get("diag_target_location", ""),
                 market_notes=market_notes,
             )
+            bar.progress(1.0, text="优化方案已就绪")
         status.update(label="优化方案已就绪", state="complete", expanded=False)
         st.session_state["diag_result"] = result
         st.session_state["diag_done"] = True

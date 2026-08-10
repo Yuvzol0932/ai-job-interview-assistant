@@ -8,4 +8,4 @@ def test_app_runs_without_exception(monkeypatch):
     at = AppTest.from_file("app.py", default_timeout=30)
     at.run()
     assert not at.exception
-    assert "AI 求职面试助手" in at.title[0].value
+    assert any("AI 求职面试助手" in title.value for title in at.title)

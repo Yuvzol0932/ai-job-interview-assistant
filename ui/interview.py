@@ -16,7 +16,6 @@ from services.interview_service import (
 from services.job_catalog import CUSTOM_LABEL, job_labels
 from services.report_service import ReportError, generate_report
 from services.report_store import save_report
-from ui._widgets import render_thinking
 
 
 def render(client) -> None:
@@ -167,12 +166,13 @@ def _render_finished(client, state) -> None:
     if st.button("生成面试复盘", type="primary"):
         try:
             with st.status("正在整理这场面试…", expanded=True) as status:
-                render_thinking("面试官正在翻看你的回答…")
+                bar = st.progress(0.1, text="面试官正在翻看你的回答…")
                 time.sleep(0.6)
-                status.update(label="正在逐题点评…")
+                bar.progress(0.45, text="正在逐题点评…")
                 time.sleep(0.6)
-                status.update(label="正在写面试官手记…")
+                bar.progress(0.8, text="正在写面试官手记…")
                 report = generate_report(client, state)
+                bar.progress(1.0, text="手记写好了")
             status.update(label="手记写好了", state="complete", expanded=False)
             save_report(report)
             st.session_state["current_report"] = report

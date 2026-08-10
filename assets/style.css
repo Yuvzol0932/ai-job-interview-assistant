@@ -38,39 +38,12 @@ h2 {
     letter-spacing: -0.01em;
 }
 
-/* ---------- 首页 Hero ---------- */
+/* ---------- 首页标题 ---------- */
 
-.hero {
-    padding: 1.2rem 0 0.6rem;
-    animation: hero-in 0.5s ease-out both;
-}
-
-.hero-eyebrow {
-    font-size: 0.82rem;
-    font-weight: 600;
-    letter-spacing: 0.14em;
-    color: var(--teal);
-    margin: 0 0 0.4rem;
-    text-transform: uppercase;
-}
-
-.hero-title {
-    font-size: clamp(1.6rem, 3vw, 2.4rem);
+[data-testid="stHeading"] h1 {
+    font-size: clamp(1.55rem, 3vw, 2.3rem);
     font-weight: 800;
-    line-height: 1.25;
     letter-spacing: -0.02em;
-    margin: 0 0 0.5rem;
-}
-
-.hero-sub {
-    font-size: 1rem;
-    color: var(--muted);
-    margin: 0;
-}
-
-@keyframes hero-in {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
 }
 
 /* ---------- 侧边栏 ---------- */
@@ -148,39 +121,14 @@ h2 {
 .stProgress > div > div > div {
     background-color: var(--teal);
     border-radius: 999px;
+    transition: width 0.8s ease;
 }
 
-/* ---------- 思考动画条 ---------- */
+/* ---------- 面试官手记（引用块） ---------- */
 
-.thinking-wrap {
-    padding: 0.8rem 0 1.4rem;
-}
-
-.thinking-label {
+blockquote {
     font-family: var(--hand);
     font-size: 1.05rem;
-    color: var(--teal-dark);
-    margin-bottom: 0.5rem;
-}
-
-.thinking-bar {
-    height: 6px;
-    border-radius: 999px;
-    background: linear-gradient(90deg, var(--teal), var(--amber), var(--teal));
-    background-size: 200% 100%;
-    animation: thinking-shimmer 1.3s linear infinite;
-}
-
-@keyframes thinking-shimmer {
-    0% { background-position: 0% 0; }
-    100% { background-position: 200% 0; }
-}
-
-/* ---------- 面试官手记（报告） ---------- */
-
-.hand-note {
-    font-family: var(--hand);
-    font-size: 1.06rem;
     line-height: 1.9;
     color: var(--ink);
     background: #FFFDF7;
@@ -188,20 +136,6 @@ h2 {
     border-radius: 0 14px 14px 0;
     padding: 1rem 1.2rem;
     margin: 0.6rem 0 1.2rem;
-}
-
-.hand-heading {
-    font-family: var(--hand);
-    font-size: 1.3rem;
-    color: var(--teal-dark);
-    border-bottom: 1px dashed var(--line);
-    padding-bottom: 0.4rem;
-    margin: 1.6rem 0 0.8rem;
-}
-
-.hand-quote {
-    font-family: var(--hand);
-    color: var(--amber);
 }
 
 /* ---------- 历史记录 ---------- */
@@ -238,13 +172,10 @@ h2 {
 /* ---------- 减少动态效果 ---------- */
 
 @media (prefers-reduced-motion: reduce) {
-    .hero {
-        animation: none;
-    }
-    .thinking-bar {
-        animation: none;
-    }
     .stButton > button {
+        transition: none;
+    }
+    .stProgress > div > div > div {
         transition: none;
     }
 }

@@ -4,16 +4,8 @@ import streamlit as st
 
 
 def render(client) -> None:
-    st.markdown(
-        """
-        <div class="hero">
-            <p class="hero-eyebrow">校园求职 · 面试练习室</p>
-            <h1 class="hero-title">把每一次练习，都变成下一次面试的底气。</h1>
-            <p class="hero-sub">三步走完求职备战：诊断简历 → 模拟面试 → 拿到面试官手记。</p>
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+    st.title("把每一次练习，都变成下一次面试的底气。")
+    st.caption("校园求职 · 面试练习室 ｜ 三步走完求职备战：诊断简历 → 模拟面试 → 拿到面试官手记。")
 
     metric1, metric2, metric3 = st.columns(3)
     metric1.metric("求职闭环", "3 步")
