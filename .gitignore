@@ -14,6 +14,7 @@ data/reports/*
 
 # 测试与工具缓存
 .pytest_cache/
+.playwright-cli/
 *.log
 .DS_Store
 .idea/

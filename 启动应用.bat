@@ -17,6 +17,15 @@ if not exist ".venv\Scripts\python.exe" (
     exit /b 1
 )
 
+rem 检查 8501 端口是否被旧程序占用
+netstat -ano | findstr ":8501" | findstr "LISTENING" >nul
+if %errorlevel%==0 (
+    echo [提示] 检测到 8501 端口已被旧的应用占用。
+    echo 请先关闭旧的黑色窗口，再重新双击本程序。
+    pause
+    exit /b 1
+)
+
 rem 自动跳过 Streamlit 首次运行的邮箱提示，避免卡在 Email 输入
 if not exist "%USERPROFILE%\.streamlit\credentials.toml" (
     if not exist "%USERPROFILE%\.streamlit" mkdir "%USERPROFILE%\.streamlit"
