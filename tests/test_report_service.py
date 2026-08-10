@@ -15,13 +15,13 @@ REPORT_JSON = json.dumps(
             "临场应变": 7,
         },
         "total_score": 74,
-        "strengths": ["回答完整", "有具体例子"],
-        "weaknesses": ["量化不足"],
-        "reference_answers": [
-            {"question": "q1", "answer": "参考答案一"},
-            {"question": "q2", "answer": "参考答案二"},
+        "overall_impression": "整体不错，有具体例子，但量化表达可以更强。",
+        "question_comments": [
+            {"question": "q1", "comment": "第一题回答完整，但可以前置结论。"},
+            {"question": "q2", "comment": "第二题例子不错，缺一个量化结果。"},
         ],
-        "suggestions": ["多用 STAR", "提前准备"],
+        "growth_advice": ["多用 STAR 结构", "提前准备岗位提问"],
+        "closing": "下次记得先讲结果。",
     },
     ensure_ascii=False,
 )
@@ -64,7 +64,10 @@ def test_generate_report():
         "临场应变",
     }
     assert report.total_score == 74
-    assert len(report.reference_answers) == 2
+    assert "整体不错" in report.overall_impression
+    assert len(report.question_comments) == 2
+    assert len(report.growth_advice) == 2
+    assert report.closing
 
 
 def test_generate_report_stream_tokens():
@@ -106,3 +109,16 @@ def test_report_includes_follow_up():
     content = client.last_messages[-1]["content"]
     assert "面试官追问" in content
     assert "追问回答" in content
+
+
+def test_delete_report(monkeypatch, tmp_path):
+    from services import report_store
+
+    monkeypatch.setattr(report_store, "REPORT_DIR", tmp_path)
+    state = _finished_state()
+    report = generate_report(FakeClient(), state)
+    report_store.save_report(report)
+    assert len(report_store.list_reports()) == 1
+    assert report_store.delete_report(report.report_id) is True
+    assert len(report_store.list_reports()) == 0
+    assert report_store.delete_report(report.report_id) is False
