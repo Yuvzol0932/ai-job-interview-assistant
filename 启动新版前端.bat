@@ -33,5 +33,6 @@ start "AIJobAssistant-Web" cmd /k "cd /d web && npm run dev"
 
 echo [3/3] Done. Open http://localhost:5173 in your browser.
 echo Tip: close the two black windows to stop the app.
+start "" http://localhost:5173
 pause
 endlocal
