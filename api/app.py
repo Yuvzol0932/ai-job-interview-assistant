@@ -1,8 +1,11 @@
 """FastAPI 应用入口：注册中间件与路由。"""
 
+from pathlib import Path
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 
 from api.routers import interview, reports, resume
 from services.job_catalog import job_labels
@@ -40,3 +43,9 @@ def health() -> dict:
 @app.get("/api/jobs")
 def jobs() -> dict:
     return {"labels": job_labels()}
+
+
+# 生产模式：若前端已构建（web/dist 存在），由同一个服务托管页面与 API
+_dist = Path(__file__).resolve().parents[1] / "web" / "dist"
+if _dist.exists():
+    app.mount("/", StaticFiles(directory=_dist, html=True), name="frontend")
