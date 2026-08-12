@@ -3,6 +3,11 @@ setlocal
 chcp 65001 >nul
 cd /d "%~dp0"
 
+rem Clear dead proxy vars inherited from some launchers
+set HTTP_PROXY=
+set HTTPS_PROXY=
+set ALL_PROXY=
+
 echo ============================================
 echo  Push to GitHub (one-click)
 echo  Repo name : ai-job-interview-assistant
