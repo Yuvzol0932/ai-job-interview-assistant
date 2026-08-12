@@ -32,7 +32,7 @@ jobs:
           context: .
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}:latest
-            ghcr.io/${{ github.repository }}:${{ github.sha }}
+            ghcr.io/yuvzol0932/ai-job-interview-assistant:latest
+            ghcr.io/yuvzol0932/ai-job-interview-assistant:${{ github.sha }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
