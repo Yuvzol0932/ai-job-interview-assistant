@@ -16,8 +16,12 @@ if errorlevel 1 (
 
 gh auth status >nul 2>nul
 if errorlevel 1 (
-    echo [2/4] Please log in to GitHub in the browser window...
-    gh auth login --web
+    echo [2/4] Refreshing GitHub login, please complete it in the browser...
+    gh auth refresh -h github.com
+    if errorlevel 1 (
+        echo Please log in to GitHub in the browser window...
+        gh auth login --web
+    )
 )
 
 echo [3/4] Creating remote repo and pushing...
