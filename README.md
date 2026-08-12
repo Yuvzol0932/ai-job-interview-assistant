@@ -92,10 +92,18 @@ data/reports/ 本地报告存储（不入库）
 
 ### 免费托管（Hugging Face Spaces）
 
-1. 在 Hugging Face 创建一个新 Space（SDK 选 Docker）。
-2. 从刚推送的 GitHub 仓库导入；构建由仓库内 `Dockerfile` 完成（镜像内会自动安装依赖并构建前端）。
-3. 在 Space 的 Settings → Secrets 中配置 `LLM_API_KEY`，并设置 `LLM_MODE=real`；不配置则默认演示模式。
-4. 等待构建完成后访问 Space 提供的公网地址。
+1. 在 Hugging Face 创建一个新 Space（SDK 选 Docker，名称 `ai-job-interview-assistant`，License 随意）。
+2. 在本机把仓库推送到 Space（首次会提示输入 HF 用户名与访问令牌；令牌在 `huggingface.co/settings/tokens` 创建，勾选 write 权限）：
+
+```bash
+git remote add hf https://huggingface.co/spaces/Yuvzol0932/ai-job-interview-assistant
+git push hf main
+```
+
+也可以直接双击 `部署HuggingFace.bat`（会先推 GitHub 最新提交，再推 HF Space）。
+3. 构建由仓库内 `Dockerfile` 完成（镜像内会自动安装依赖并构建前端），首次构建约 5–15 分钟。
+4. 构建完成后，在 Space 的 Settings → Variables and secrets 中配置 `LLM_API_KEY`，并设置 `LLM_MODE=real`；不配置则默认演示模式。
+5. 打开 `https://huggingface.co/spaces/Yuvzol0932/ai-job-interview-assistant` 验证。
 
 ### 国内访问与兜底
 
