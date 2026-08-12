@@ -90,24 +90,31 @@ data/reports/ 本地报告存储（不入库）
 
 双击 `推送GitHub.bat`（脚本会自动安装 GitHub CLI、登录、创建公开仓库并推送 `main` 分支与全部标签）。
 
-### 免费托管（Hugging Face Spaces）
+### 免费托管（Sealos，推荐）
 
-1. 在 Hugging Face 创建一个新 Space（SDK 选 Docker，名称 `ai-job-interview-assistant`，License 随意）。
-2. 在本机把仓库推送到 Space（首次会提示输入 HF 用户名与访问令牌；令牌在 `huggingface.co/settings/tokens` 创建，勾选 write 权限）：
+> Hugging Face Spaces 的 Docker SDK 现在需要付费专业版；静态空间虽然免费，但跑不了 FastAPI 后端，因此改用 **Sealos**（国内平台、访问快、无需信用卡，注册赠送 7 天免费试用；轻量配置按小时计费，演示期间暂停不计费）。
 
-```bash
-git remote add hf https://huggingface.co/spaces/Yuvzol0932/ai-job-interview-assistant
-git push hf main
+1. 确保 GitHub 仓库已推送（双击 `推送GitHub.bat`）。
+2. 双击 `部署Sealos.bat`，脚本会把仓库地址复制到剪贴板并打开 Sealos 控制台。
+3. 在 Sealos 控制台（`cloud.sealos.io`）注册/登录（GitHub 或手机号均可，无需信用卡）。
+4. 进入「应用管理 / App Launchpad」→「创建应用」，选择 **GitHub 导入**，粘贴仓库地址 `Yuvzol0932/ai-job-interview-assistant`，分支 `main`。
+5. Sealos 会自动识别仓库内的 `Dockerfile` 并构建；在端口配置中暴露容器端口 **7860**。
+6. 在应用的环境变量中配置：
+
+```text
+LLM_API_KEY=你的密钥
+LLM_MODE=real
 ```
 
-也可以直接双击 `部署HuggingFace.bat`（会先推 GitHub 最新提交，再推 HF Space）。
-3. 构建由仓库内 `Dockerfile` 完成（镜像内会自动安装依赖并构建前端），首次构建约 5–15 分钟。
-4. 构建完成后，在 Space 的 Settings → Variables and secrets 中配置 `LLM_API_KEY`，并设置 `LLM_MODE=real`；不配置则默认演示模式。
-5. 打开 `https://huggingface.co/spaces/Yuvzol0932/ai-job-interview-assistant` 验证。
+> 不配置 `LLM_API_KEY` 时默认进入 mock 演示模式，可先验证部署是否成功。
+
+7. 点击部署，等待首次构建完成（约 5–15 分钟），打开生成的公网地址验证。
+
+> 若试用期后仍需长期在线：演示/验收期间开机，其余时间暂停即可，费用通常为每小时几分钱；也可以完全不充值，用本地演示兜底。
 
 ### 国内访问与兜底
 
-- 电脑与手机分别打开部署链接验证；若访问慢或不可用，以「本地运行 + 录屏演示 + 演示视频」作为正式演示路径。
+- 电脑与手机分别打开 Sealos 部署链接验证；若访问慢或不可用，以「本地运行 + 录屏演示 + 演示视频」作为正式演示路径。
 - 本地运行：双击 `启动新版前端.bat`，打开 `http://localhost:5173`。
 
 ### 真机回归

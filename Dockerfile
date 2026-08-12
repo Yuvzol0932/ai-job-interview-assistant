@@ -1,4 +1,4 @@
-# Hugging Face Spaces 部署：镜像内构建 React 前端并运行 FastAPI（同端口托管页面与 API）
+# Docker 部署：镜像内构建 React 前端并运行 FastAPI（同端口托管页面与 API）；Sealos / Hugging Face 等平台均可用
 FROM python:3.12-slim
 
 WORKDIR /app
