@@ -9,6 +9,7 @@ export function PageHeader({ title, caption }: PageHeaderProps) {
       <h1 className="text-3xl font-extrabold tracking-tight text-ink md:text-4xl">
         {title}
       </h1>
+      <div className="hairline-gold mt-4 w-14" aria-hidden="true" />
       {caption ? <p className="mt-2 max-w-2xl text-muted">{caption}</p> : null}
     </header>
   );

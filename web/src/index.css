@@ -1,25 +1,34 @@
 @import "tailwindcss";
 
 @theme {
+  --color-porcelain: #fbfcfe;
   --color-canvas: #f7f9fc;
   --color-surface: #ffffff;
   --color-fog: #eaf2ff;
   --color-ink: #12213a;
   --color-muted: #5d6b82;
   --color-line: #dce5f1;
+  --color-hairline: #e8edf5;
   --color-blue: #1668e3;
   --color-blue-deep: #0b4fb4;
   --color-gold: #b58b32;
+  --color-gold-soft: #fbf6ea;
 
   --font-sans: "PingFang SC", "Microsoft YaHei", -apple-system, "Segoe UI",
     sans-serif;
 
-  --radius-card: 18px;
+  --radius-card: 20px;
   --radius-control: 12px;
 
-  --shadow-card: 0 1px 4px rgba(18, 33, 58, 0.04);
-  --shadow-card-hover: 0 8px 20px rgba(18, 33, 58, 0.08);
-  --shadow-btn: 0 6px 18px rgba(22, 104, 227, 0.22);
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --shadow-card: 0 1px 2px rgba(18, 33, 58, 0.03),
+    0 12px 32px -16px rgba(18, 33, 58, 0.1);
+  --shadow-card-hover: 0 2px 4px rgba(18, 33, 58, 0.04),
+    0 20px 48px -20px rgba(18, 33, 58, 0.16);
+  --shadow-btn: 0 8px 20px -8px rgba(22, 104, 227, 0.45),
+    0 2px 6px rgba(22, 104, 227, 0.18);
+  --shadow-dial: 0 30px 80px -30px rgba(18, 33, 58, 0.28);
 }
 
 html {
@@ -27,7 +36,7 @@ html {
 }
 
 body {
-  background-color: var(--color-canvas);
+  background-color: var(--color-porcelain);
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -35,75 +44,157 @@ body {
 }
 
 ::selection {
-  background-color: rgba(22, 104, 227, 0.18);
+  background-color: rgba(22, 104, 227, 0.16);
+  color: var(--color-ink);
 }
 
 *:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(22, 104, 227, 0.2);
-  border-radius: 6px;
+  outline: 2px solid rgba(22, 104, 227, 0.55);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
-/* 首页旅程图动效（transform 驱动，避免布局抖动） */
-.journey-track::before {
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c9d4e3;
+  border: 2px solid var(--color-porcelain);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b0bed2;
+}
+
+/* ---------- 环境背景：极淡的蓝/金光晕 + 细网格 ---------- */
+
+.app-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.app-bg::before {
   content: "";
   position: absolute;
-  left: 10%;
-  right: 10%;
-  top: 50%;
+  inset: 0;
+  background:
+    radial-gradient(
+      1100px 700px at 88% -10%,
+      rgba(22, 104, 227, 0.08),
+      transparent 60%
+    ),
+    radial-gradient(
+      900px 700px at -8% 108%,
+      rgba(181, 139, 50, 0.07),
+      transparent 55%
+    );
+}
+
+/* ---------- 玻璃导航（用于内容在其下滚动的具体效果） ---------- */
+
+.glass-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: rgba(251, 252, 254, 0.74);
+  backdrop-filter: blur(18px) saturate(1.5);
+  -webkit-backdrop-filter: blur(18px) saturate(1.5);
+  border-bottom: 1px solid rgba(220, 229, 241, 0.75);
+}
+
+.glass-header::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
   height: 2px;
-  transform: translateY(-50%);
-  border-radius: 2px;
   background: linear-gradient(
     90deg,
-    rgba(22, 104, 227, 0.18) 0%,
-    rgba(22, 104, 227, 0.55) 45%,
-    rgba(181, 139, 50, 0.55) 100%
+    transparent,
+    rgba(22, 104, 227, 0.55) 30%,
+    rgba(181, 139, 50, 0.6) 70%,
+    transparent
   );
 }
 
-.journey-dot {
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 14px;
-  height: 14px;
-  margin: -7px 0 0 -7px;
-  border-radius: 9999px;
-  background: var(--color-blue);
+/* ---------- 高级表面：发丝描边 + 双层投影 + 顶部内高光 ---------- */
+
+.card-surface {
+  background: linear-gradient(180deg, #ffffff 0%, #fdfdff 100%);
+  border: 1px solid var(--color-line);
+  border-radius: var(--radius-card);
   box-shadow:
-    0 0 0 6px rgba(22, 104, 227, 0.12),
-    0 0 22px rgba(22, 104, 227, 0.55);
-  animation: journey-travel 9s cubic-bezier(0.45, 0, 0.55, 1) infinite;
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    var(--shadow-card);
 }
 
-@keyframes journey-travel {
-  0% {
-    transform: translateX(calc(var(--journey-range, 300px) / -2));
-  }
-  50% {
-    transform: translateX(calc(var(--journey-range, 300px) / 2));
-  }
-  100% {
-    transform: translateX(calc(var(--journey-range, 300px) / -2));
-  }
+.card-surface-hover {
+  transition:
+    transform 180ms var(--ease-standard),
+    box-shadow 180ms var(--ease-standard),
+    border-color 180ms var(--ease-standard);
 }
 
-.journey-ring {
-  animation: journey-pulse 3s ease-out infinite;
+.card-surface-hover:hover {
+  transform: translateY(-3px);
+  border-color: #c9d8ee;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    var(--shadow-card-hover);
 }
 
-@keyframes journey-pulse {
-  0% {
-    box-shadow: 0 0 0 0 rgba(181, 139, 50, 0.35);
-  }
-  70% {
-    box-shadow: 0 0 0 14px rgba(181, 139, 50, 0);
-  }
-  100% {
-    box-shadow: 0 0 0 0 rgba(181, 139, 50, 0);
-  }
+.hairline-gold {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(181, 139, 50, 0.5) 50%,
+    transparent
+  );
 }
+
+/* ---------- 表盘：发丝刻度与金色校准点 ---------- */
+
+.dial-ring {
+  fill: none;
+  stroke: var(--color-hairline);
+}
+
+.dial-tick {
+  stroke: #c9d4e3;
+  stroke-width: 1;
+}
+
+.dial-tick-major {
+  stroke: #b0bed2;
+  stroke-width: 1.3;
+}
+
+.dial-station {
+  fill: var(--color-gold);
+}
+
+.dial-needle {
+  stroke: var(--color-blue);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.hero-title {
+  text-wrap: balance;
+}
+
+/* ---------- 减少动态效果 ---------- */
 
 @media (prefers-reduced-motion: reduce) {
   html {
@@ -115,12 +206,5 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-  .journey-dot {
-    transform: translateX(0);
-    animation: none;
-  }
-  .journey-ring {
-    animation: none;
   }
 }

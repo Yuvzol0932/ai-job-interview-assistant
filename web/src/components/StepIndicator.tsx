@@ -14,15 +14,19 @@ export function StepIndicator({ steps, current }: StepIndicatorProps) {
             <span
               className={`flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-semibold transition-colors duration-150 ${
                 active
-                  ? "bg-blue text-white shadow-btn"
+                  ? "bg-fog text-blue-deep"
                   : done
-                    ? "bg-fog text-blue-deep"
-                    : "bg-surface text-muted border border-line"
+                    ? "bg-gold-soft text-gold"
+                    : "text-muted"
               }`}
             >
               <span
-                className={`flex size-5 items-center justify-center rounded-full text-xs ${
-                  active ? "bg-white/20" : done ? "bg-blue/15" : "bg-canvas"
+                className={`flex size-5 items-center justify-center rounded-full border text-xs ${
+                  active
+                    ? "border-blue bg-blue text-white"
+                    : done
+                      ? "border-gold/40 bg-surface text-gold"
+                      : "border-line bg-surface text-muted"
                 }`}
               >
                 {done ? "✓" : index + 1}
@@ -30,7 +34,12 @@ export function StepIndicator({ steps, current }: StepIndicatorProps) {
               {step}
             </span>
             {index < steps.length - 1 ? (
-              <span className="h-px w-6 bg-line sm:w-10" aria-hidden="true" />
+              <span
+                className={`h-px w-6 sm:w-10 ${
+                  done ? "bg-gold/40" : "bg-line"
+                }`}
+                aria-hidden="true"
+              />
             ) : null}
           </li>
         );

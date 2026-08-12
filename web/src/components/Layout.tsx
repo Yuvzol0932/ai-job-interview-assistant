@@ -24,39 +24,53 @@ export function Layout() {
   }, []);
 
   return (
-    <div className="min-h-screen">
-      <div className="h-0.5 bg-gradient-to-r from-blue via-[#7FB0F5] to-gold" />
-      <header className="sticky top-0 z-40 border-b border-line bg-surface/90 backdrop-blur">
+    <div className="relative min-h-screen">
+      <div className="app-bg" aria-hidden="true" />
+      <header className="glass-header">
         <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
           <NavLink to="/" className="text-lg font-extrabold tracking-tight text-ink">
             AI 求职面试助手
           </NavLink>
-          <nav className="flex items-center gap-1 rounded-full border border-line bg-surface p-1">
+          <nav className="flex items-center gap-1">
             {navItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 end={item.to === "/"}
                 className={({ isActive }) =>
-                  `rounded-full px-3 py-1.5 text-sm font-semibold transition-colors duration-150 sm:px-4 ${
+                  `relative rounded-full px-3 py-1.5 text-sm font-semibold transition-colors duration-150 sm:px-4 ${
                     isActive
-                      ? "bg-blue text-white shadow-btn"
-                      : "text-muted hover:bg-fog hover:text-blue"
+                      ? "bg-fog text-blue"
+                      : "text-muted hover:bg-fog/60 hover:text-blue"
                   }`
                 }
               >
-                {item.label}
+                {({ isActive }) => (
+                  <>
+                    {item.label}
+                    {isActive ? (
+                      <span
+                        className="absolute inset-x-3 -bottom-0.5 h-px bg-gold"
+                        aria-hidden="true"
+                      />
+                    ) : null}
+                  </>
+                )}
               </NavLink>
             ))}
           </nav>
-          <div className="flex items-center gap-2 text-xs text-muted">
+          <div
+            className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+              online === null
+                ? "border-gold/30 bg-gold-soft text-gold"
+                : online
+                  ? "border-blue/20 bg-fog text-blue-deep"
+                  : "border-line bg-surface text-muted"
+            }`}
+          >
             <span
-              className={`size-2 rounded-full ${
-                online === null
-                  ? "bg-gold"
-                  : online
-                    ? "bg-blue"
-                    : "bg-muted"
+              className={`size-1.5 rounded-full ${
+                online === null ? "bg-gold" : online ? "bg-blue" : "bg-muted"
               }`}
               aria-hidden="true"
             />
@@ -68,10 +82,10 @@ export function Layout() {
           </div>
         </div>
       </header>
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-12 lg:px-8">
+      <main className="relative z-10 mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 md:py-12 lg:px-8">
         <Outlet />
       </main>
-      <footer className="border-t border-line py-6 text-center text-xs text-muted">
+      <footer className="relative z-10 border-t border-line/70 py-6 text-center text-xs text-muted">
         校园求职 · AI 求职面试助手 —— 诊断简历 → 模拟面试 → 拿到面试官手记
       </footer>
     </div>

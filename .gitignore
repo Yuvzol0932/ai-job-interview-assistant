@@ -23,3 +23,4 @@ data/reports/*
 # React 前端
 web/node_modules/
 web/dist/
+.pytest-tmp/
