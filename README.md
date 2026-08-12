@@ -94,11 +94,25 @@ data/reports/ 本地报告存储（不入库）
 
 > Hugging Face Spaces 的 Docker SDK 现在需要付费专业版；静态空间虽然免费，但跑不了 FastAPI 后端，因此改用 **Sealos**（国内平台、访问快、无需信用卡，注册赠送 7 天免费试用；轻量配置按小时计费，演示期间暂停不计费）。
 
-1. 确保 GitHub 仓库已推送（双击 `推送GitHub.bat`）。
-2. 双击 `部署Sealos.bat`，脚本会把仓库地址复制到剪贴板并打开 Sealos 控制台。
+1. 确保 GitHub 仓库已推送（双击 `推送GitHub.bat`）。仓库内置的 GitHub Actions 会自动把项目构建成 Docker 镜像并发布到：
+
+```text
+ghcr.io/yuvzol0932/ai-job-interview-assistant:latest
+```
+
+> 首次构建约 5–10 分钟，可在仓库的 Actions 页面查看进度；构建完成前镜像不存在。
+
+2. 双击 `部署Sealos.bat`，脚本会把镜像地址复制到剪贴板并打开 Sealos 控制台。
 3. 在 Sealos 控制台（`cloud.sealos.io`）注册/登录（GitHub 或手机号均可，无需信用卡）。
-4. 进入「应用管理 / App Launchpad」→「创建应用」，选择 **GitHub 导入**，粘贴仓库地址 `Yuvzol0932/ai-job-interview-assistant`，分支 `main`。
-5. Sealos 会自动识别仓库内的 `Dockerfile` 并构建；在端口配置中暴露容器端口 **7860**。
+4. 进入「应用管理 / App Launchpad」→「创建应用」，部署方式选 **Docker 镜像**，粘贴：
+
+```text
+ghcr.io/yuvzol0932/ai-job-interview-assistant:latest
+```
+
+> 如果之前已经误建了一个显示 nginx 的应用，直接点进该应用选择「变更」，把镜像地址换成上面的地址即可，不需要重新建。
+
+5. 端口配置：容器端口填 **7860**，并打开公网访问（https）。
 6. 在应用的环境变量中配置：
 
 ```text
@@ -108,7 +122,7 @@ LLM_MODE=real
 
 > 不配置 `LLM_API_KEY` 时默认进入 mock 演示模式，可先验证部署是否成功。
 
-7. 点击部署，等待首次构建完成（约 5–15 分钟），打开生成的公网地址验证。
+7. 点击部署，等待镜像拉取与应用启动，打开生成的公网地址验证。
 
 > 若试用期后仍需长期在线：演示/验收期间开机，其余时间暂停即可，费用通常为每小时几分钱；也可以完全不充值，用本地演示兜底。
 
