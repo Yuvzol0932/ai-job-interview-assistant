@@ -1,12 +1,25 @@
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import {
+  AnimatePresence,
+  motion,
+  useReducedMotion,
+} from "framer-motion";
 
 const ease: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
-const steps = [
+const HEADLINES = [
+  "把每一次练习，都变成下一次面试的底气。",
+  "简历被看见之前，先把自己准备好。",
+  "面试不是临场发挥，是提前校准。",
+  "把迷茫的求职，走成一条清晰的路径。",
+];
+
+const STEPS = [
   {
     title: "简历诊断",
-    oneLine: "粘贴或上传简历，先找出没写清楚的地方。",
+    angle: 150,
+    oneLine: "先找出没写清楚的地方",
     detail: "AI 先问清缺失信息，再对照目标岗位与当地市场，给出专属优化方案。",
     to: "/resume",
     icon: (
@@ -19,8 +32,9 @@ const steps = [
   },
   {
     title: "模拟面试",
-    oneLine: "选择岗位方向，像真实面试官一样逐题作答。",
-    detail: "回答空泛时 AI 会追问细节，帮你把每一次练习变成下一次的底气。",
+    angle: 90,
+    oneLine: "像真实面试官一样逐题作答",
+    detail: "回答空泛时 AI 会追问细节，把每一次练习变成下一次的底气。",
     to: "/interview",
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="size-5">
@@ -31,7 +45,8 @@ const steps = [
   },
   {
     title: "面试复盘",
-    oneLine: "五维评分 + 面试官手记，进步看得见。",
+    angle: 30,
+    oneLine: "五维评分 + 面试官手记",
     detail: "逐题点评、成长建议与收尾鼓励，历史复盘随时回看、可删除。",
     to: "/review",
     icon: (
@@ -42,25 +57,61 @@ const steps = [
   },
 ];
 
-function DialPanel() {
-  const ticks = Array.from({ length: 60 }, (_, index) => index * 6);
-  const stations = [
-    { angle: 150, label: "诊断", active: true },
-    { angle: 90, label: "面试", active: false },
-    { angle: 30, label: "复盘", active: false },
-  ];
+function polar(angle: number, radius: number) {
+  const rad = (angle * Math.PI) / 180;
+  return { x: 100 + radius * Math.cos(rad), y: 100 - radius * Math.sin(rad) };
+}
 
-  function polar(angle: number, radius: number) {
-    const rad = (angle * Math.PI) / 180;
-    return { x: 100 + radius * Math.cos(rad), y: 100 - radius * Math.sin(rad) };
+function nearestStep(angle: number) {
+  let best = 0;
+  let bestDistance = Infinity;
+  STEPS.forEach((step, index) => {
+    const diff = Math.abs(angle - step.angle);
+    const distance = Math.min(diff, 360 - diff);
+    if (distance < bestDistance) {
+      bestDistance = distance;
+      best = index;
+    }
+  });
+  return best;
+}
+
+function DialPanel() {
+  const navigate = useNavigate();
+  const reduced = useReducedMotion();
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [active, setActive] = useState(0);
+  const ticks = Array.from({ length: 60 }, (_, index) => index * 6);
+  const activeAngle = STEPS[active].angle;
+  const needle = polar(activeAngle, 58);
+
+  function handleMove(clientX: number, clientY: number) {
+    const svg = svgRef.current;
+    if (!svg) return;
+    const rect = svg.getBoundingClientRect();
+    const x = ((clientX - rect.left) / rect.width) * 200;
+    const y = ((clientY - rect.top) / rect.height) * 200;
+    let deg = (Math.atan2(-(y - 100), x - 100) * 180) / Math.PI;
+    deg = (deg + 360) % 360;
+    setActive(nearestStep(deg));
   }
 
-  const needle = polar(150, 58);
+  const needleTransition = reduced
+    ? { duration: 0 }
+    : { type: "spring", stiffness: 260, damping: 26 };
 
   return (
     <div className="card-surface card-surface-hover relative mx-auto w-full max-w-md p-8 shadow-dial">
       <div className="hairline-gold mb-8" aria-hidden="true" />
-      <svg viewBox="0 0 200 200" role="img" aria-label="求职备战三步校准：诊断、面试、复盘">
+      <svg
+        ref={svgRef}
+        viewBox="0 0 200 200"
+        role="group"
+        aria-label="求职备战三步校准表盘：简历诊断、模拟面试、面试复盘。鼠标靠近金点可切换，点击进入对应页面。"
+        className="block w-full touch-none select-none"
+        onMouseMove={(event) => handleMove(event.clientX, event.clientY)}
+        onMouseLeave={() => setActive(0)}
+      >
         <circle className="dial-ring" cx="100" cy="100" r="88" />
         <circle className="dial-ring" cx="100" cy="100" r="70" strokeOpacity="0.55" />
         {ticks.map((angle) => {
@@ -78,49 +129,132 @@ function DialPanel() {
             />
           );
         })}
-        {stations.map((station) => {
-          const point = polar(station.angle, 60);
-          return (
-            <g key={station.label}>
-              <circle
-                className="dial-station"
-                cx={point.x}
-                cy={point.y}
-                r={station.active ? 5 : 4}
-              />
-            </g>
-          );
-        })}
-        <line
+        <motion.line
           className="dial-needle"
           x1="100"
           y1="100"
-          x2={needle.x}
-          y2={needle.y}
+          initial={{ x2: polar(STEPS[0].angle, 58).x, y2: polar(STEPS[0].angle, 58).y }}
+          animate={{ x2: needle.x, y2: needle.y }}
+          transition={needleTransition}
         />
         <circle cx="100" cy="100" r="4.5" fill="#12213A" />
+        {STEPS.map((step, index) => {
+          const point = polar(step.angle, 60);
+          const isActive = index === active;
+          return (
+            <motion.circle
+              key={step.title}
+              className="dial-station"
+              cx={point.x}
+              cy={point.y}
+              role="button"
+              tabIndex={0}
+              aria-label={`${step.title}，${step.oneLine}`}
+              aria-pressed={isActive}
+              initial={{ r: 4.5 }}
+              animate={{
+                r: isActive ? 7.5 : 4.5,
+                stroke: isActive ? "#B58B32" : "transparent",
+                strokeWidth: isActive ? 2 : 0,
+              }}
+              transition={{ duration: reduced ? 0 : 0.22, ease }}
+              style={{ cursor: "pointer", outline: "none" }}
+              onMouseEnter={() => setActive(index)}
+              onFocus={() => setActive(index)}
+              onClick={() => navigate(step.to)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  navigate(step.to);
+                }
+                if (event.key === "ArrowRight" || event.key === "ArrowLeft") {
+                  event.preventDefault();
+                  const delta = event.key === "ArrowRight" ? 1 : -1;
+                  setActive((index + delta + STEPS.length) % STEPS.length);
+                }
+              }}
+            />
+          );
+        })}
       </svg>
-      <div className="mt-8 grid grid-cols-3 gap-3 text-center">
-        {stations.map((station, index) => (
-          <div key={station.label}>
-            <span
-              className={`text-xs font-semibold ${
-                station.active ? "text-blue" : "text-muted"
+
+      <AnimatePresence>
+        {STEPS.map((step, index) => {
+          if (index !== active) return null;
+          const point = polar(step.angle, 60);
+          return (
+            <motion.div
+              key={step.title}
+              initial={{ opacity: 0, scale: 0.8, y: 4 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              transition={{ duration: reduced ? 0 : 0.2, ease }}
+              className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-[150%] whitespace-nowrap rounded-full border border-gold/40 bg-surface/95 px-3 py-1.5 text-xs font-semibold text-ink shadow-card backdrop-blur-sm"
+              style={{ left: `${(point.x / 200) * 100}%`, top: `${(point.y / 200) * 100}%` }}
+            >
+              {step.title}
+            </motion.div>
+          );
+        })}
+      </AnimatePresence>
+
+      <div className="mt-8 space-y-2">
+        {STEPS.map((step, index) => {
+          const isActive = index === active;
+          return (
+            <button
+              key={step.title}
+              type="button"
+              onClick={() => navigate(step.to)}
+              onMouseEnter={() => setActive(index)}
+              className={`block w-full rounded-control px-3 py-2.5 text-left transition-colors duration-150 ${
+                isActive ? "bg-fog" : "hover:bg-fog/50"
               }`}
             >
-              第 {index + 1} 步
-            </span>
-            <p className={`text-sm font-semibold ${station.active ? "text-ink" : "text-muted"}`}>
-              {station.label}
-            </p>
-          </div>
-        ))}
+              <span className="flex items-baseline gap-3">
+                <span
+                  className={`text-xs font-semibold tabular-nums ${
+                    isActive ? "text-blue" : "text-gold"
+                  }`}
+                >
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className={`font-semibold ${isActive ? "text-ink" : "text-muted"}`}>
+                  {step.title}
+                </span>
+              </span>
+              {isActive ? (
+                <motion.p
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  transition={{ duration: reduced ? 0 : 0.2, ease }}
+                  className="mt-1.5 overflow-hidden pl-8 text-sm leading-relaxed text-muted"
+                >
+                  {step.detail}
+                </motion.p>
+              ) : (
+                <span className="ml-8 block text-sm text-muted">{step.oneLine}</span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </div>
   );
 }
 
 export function Home() {
+  const [headlineIndex, setHeadlineIndex] = useState(0);
+  const reduced = useReducedMotion();
+
+  useEffect(() => {
+    const id = window.setInterval(
+      () => setHeadlineIndex((index) => (index + 1) % HEADLINES.length),
+      4200,
+    );
+    return () => window.clearInterval(id);
+  }, []);
+
   return (
     <div>
       <section className="grid items-center gap-12 py-8 lg:grid-cols-[1.05fr_0.95fr] lg:py-16">
@@ -129,8 +263,22 @@ export function Home() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.55, ease }}
         >
-          <h1 className="hero-title max-w-xl text-4xl font-extrabold leading-[1.12] tracking-tight text-ink md:text-6xl">
-            把每一次练习，都变成下一次面试的底气。
+          <h1
+            className="headline-gradient hero-title max-w-xl text-4xl font-extrabold leading-[1.12] tracking-tight md:text-6xl"
+            aria-live="polite"
+          >
+            <AnimatePresence mode="wait">
+              <motion.span
+                key={headlineIndex}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: reduced ? 0 : 0.45, ease }}
+                className="block"
+              >
+                {HEADLINES[headlineIndex]}
+              </motion.span>
+            </AnimatePresence>
           </h1>
           <p className="mt-6 max-w-lg text-base leading-relaxed text-muted md:text-lg">
             面向校园求职的 AI 面试教练：先诊断简历，再模拟面试，最后拿到一份面试官口吻的复盘。
@@ -168,7 +316,7 @@ export function Home() {
           <div className="hairline-gold mt-4 w-16" aria-hidden="true" />
         </div>
         <div className="grid gap-5 md:grid-cols-3">
-          {steps.map((step, index) => (
+          {STEPS.map((step, index) => (
             <motion.article
               key={step.title}
               initial={{ opacity: 0, y: 14 }}
@@ -192,9 +340,7 @@ export function Home() {
                   <p className="mt-3 text-sm leading-relaxed text-muted opacity-0 transition-all duration-200 group-hover:opacity-100">
                     {step.detail}
                   </p>
-                  <span className="mt-auto pt-5 text-sm font-semibold text-blue">
-                    开始 →
-                  </span>
+                  <span className="mt-auto pt-5 text-sm font-semibold text-blue">开始 →</span>
                 </div>
               </Link>
             </motion.article>
