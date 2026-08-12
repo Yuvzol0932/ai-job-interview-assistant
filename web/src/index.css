@@ -194,32 +194,6 @@ body {
   text-wrap: balance;
 }
 
-/* 渐变流动标题（用户指定效果：随时间变化） */
-.headline-gradient {
-  background-image: linear-gradient(
-    105deg,
-    #0b4fb4 0%,
-    #12213a 30%,
-    #8a6a1f 62%,
-    #1668e3 100%
-  );
-  background-size: 220% auto;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  animation: gradient-shift 9s ease-in-out infinite;
-}
-
-@keyframes gradient-shift {
-  0%,
-  100% {
-    background-position: 0% 50%;
-  }
-  50% {
-    background-position: 100% 50%;
-  }
-}
-
 /* ---------- 减少动态效果 ---------- */
 
 @media (prefers-reduced-motion: reduce) {
@@ -232,9 +206,5 @@ body {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-  }
-  .headline-gradient {
-    animation: none;
-    background-position: 0% 50%;
   }
 }

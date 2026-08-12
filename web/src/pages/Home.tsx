@@ -76,6 +76,14 @@ function nearestStep(angle: number) {
   return best;
 }
 
+function charSeed(phraseIndex: number, charIndex: number) {
+  return ((phraseIndex * 17 + charIndex * 31) % 40) - 20;
+}
+
+function phraseChars(text: string) {
+  return Array.from(text);
+}
+
 function DialPanel() {
   const navigate = useNavigate();
   const reduced = useReducedMotion();
@@ -101,7 +109,7 @@ function DialPanel() {
     : { type: "spring", stiffness: 260, damping: 26 };
 
   return (
-    <div className="card-surface card-surface-hover relative mx-auto w-full max-w-md p-8 shadow-dial">
+    <div className="card-surface relative mx-auto w-full max-w-md p-8 shadow-dial">
       <div className="hairline-gold mb-8" aria-hidden="true" />
       <svg
         ref={svgRef}
@@ -207,37 +215,39 @@ function DialPanel() {
               type="button"
               onClick={() => navigate(step.to)}
               onMouseEnter={() => setActive(index)}
-              className={`block w-full rounded-control px-3 py-2.5 text-left transition-colors duration-150 ${
+              onFocus={() => setActive(index)}
+              className={`flex w-full items-center gap-3 rounded-control px-3 py-2.5 text-left transition-colors duration-150 ${
                 isActive ? "bg-fog" : "hover:bg-fog/50"
               }`}
             >
-              <span className="flex items-baseline gap-3">
-                <span
-                  className={`text-xs font-semibold tabular-nums ${
-                    isActive ? "text-blue" : "text-gold"
-                  }`}
-                >
-                  {String(index + 1).padStart(2, "0")}
-                </span>
-                <span className={`font-semibold ${isActive ? "text-ink" : "text-muted"}`}>
-                  {step.title}
-                </span>
+              <span
+                className={`text-xs font-semibold tabular-nums ${
+                  isActive ? "text-blue" : "text-gold"
+                }`}
+              >
+                {String(index + 1).padStart(2, "0")}
               </span>
-              {isActive ? (
-                <motion.p
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  transition={{ duration: reduced ? 0 : 0.2, ease }}
-                  className="mt-1.5 overflow-hidden pl-8 text-sm leading-relaxed text-muted"
-                >
-                  {step.detail}
-                </motion.p>
-              ) : (
-                <span className="ml-8 block text-sm text-muted">{step.oneLine}</span>
-              )}
+              <span className={`font-semibold ${isActive ? "text-ink" : "text-muted"}`}>
+                {step.title}
+              </span>
+              <span className="ml-auto truncate text-sm text-muted">{step.oneLine}</span>
             </button>
           );
         })}
+      </div>
+      <div className="mt-3 min-h-[3.5rem]" aria-live="polite">
+        <AnimatePresence mode="wait">
+          <motion.p
+            key={active}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: reduced ? 0 : 0.25, ease }}
+            className="text-sm leading-relaxed text-muted"
+          >
+            {STEPS[active].detail}
+          </motion.p>
+        </AnimatePresence>
       </div>
     </div>
   );
@@ -264,19 +274,53 @@ export function Home() {
           transition={{ duration: 0.55, ease }}
         >
           <h1
-            className="headline-gradient hero-title max-w-xl text-4xl font-extrabold leading-[1.12] tracking-tight md:text-6xl"
+            className="hero-title max-w-xl text-4xl font-extrabold leading-[1.12] tracking-tight text-ink md:text-6xl"
             aria-live="polite"
           >
             <AnimatePresence mode="wait">
               <motion.span
                 key={headlineIndex}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: reduced ? 0 : 0.45, ease }}
                 className="block"
               >
-                {HEADLINES[headlineIndex]}
+                {phraseChars(HEADLINES[headlineIndex]).map((char, charIndex) => (
+                  <motion.span
+                    key={`${headlineIndex}-${charIndex}`}
+                    className="inline-block whitespace-pre"
+                    initial={{
+                      opacity: 0,
+                      x: reduced ? 0 : charSeed(headlineIndex, charIndex) * 2.2,
+                      y: reduced ? 0 : -charSeed(headlineIndex + 2, charIndex) * 2.2 + 10,
+                      scale: reduced ? 1 : 1.15,
+                      filter: reduced ? "blur(0px)" : "blur(5px)",
+                    }}
+                    animate={{
+                      opacity: 1,
+                      x: 0,
+                      y: 0,
+                      scale: 1,
+                      filter: "blur(0px)",
+                      transition: {
+                        duration: reduced ? 0 : 0.55,
+                        ease,
+                        delay: reduced ? 0 : charIndex * 0.014,
+                      },
+                    }}
+                    exit={{
+                      opacity: 0,
+                      x: reduced ? 0 : charSeed(headlineIndex, charIndex) * 2.2,
+                      y: reduced ? 0 : charSeed(headlineIndex + 1, charIndex) * 2.2 - 8,
+                      scale: reduced ? 1 : 0.7,
+                      filter: reduced ? "blur(0px)" : "blur(6px)",
+                      transition: {
+                        duration: reduced ? 0 : 0.5,
+                        ease,
+                        delay: reduced ? 0 : charIndex * 0.012,
+                      },
+                    }}
+                  >
+                    {char}
+                  </motion.span>
+                ))}
               </motion.span>
             </AnimatePresence>
           </h1>
