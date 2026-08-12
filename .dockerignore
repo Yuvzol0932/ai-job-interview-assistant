@@ -1,0 +1,17 @@
+.git
+.venv
+__pycache__
+*.py[cod]
+.pytest_cache
+.pytest-tmp
+pytest-cache-files-*/
+.env
+.streamlit/secrets.toml
+data/reports/*
+!data/reports/.gitkeep
+web/node_modules
+web/dist
+web/.vite
+.playwright-cli
+.impeccable
+*.log
