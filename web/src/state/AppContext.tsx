@@ -18,9 +18,9 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
-function readSessionState<T>(key: string): T | null {
+function readLocalState<T>(key: string): T | null {
   try {
-    const raw = sessionStorage.getItem(key);
+    const raw = localStorage.getItem(key);
     return raw ? (JSON.parse(raw) as T) : null;
   } catch {
     return null;
@@ -30,15 +30,15 @@ function readSessionState<T>(key: string): T | null {
 export function AppProvider({ children }: { children: ReactNode }) {
   const [resumeText, setResumeText] = useState("");
   const [interviewState, setInterviewState] = useState<InterviewState | null>(
-    () => readSessionState<InterviewState>("interview_state"),
+    () => readLocalState<InterviewState>("interview_state"),
   );
   const [currentReport, setCurrentReport] = useState<Report | null>(null);
 
   useEffect(() => {
     if (interviewState) {
-      sessionStorage.setItem("interview_state", JSON.stringify(interviewState));
+      localStorage.setItem("interview_state", JSON.stringify(interviewState));
     } else {
-      sessionStorage.removeItem("interview_state");
+      localStorage.removeItem("interview_state");
     }
   }, [interviewState]);
 

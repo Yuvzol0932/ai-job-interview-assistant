@@ -163,6 +163,35 @@ body {
   );
 }
 
+/* ---------- 加载进度条：流动高光 ---------- */
+
+.loading-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    rgba(255, 255, 255, 0.45) 50%,
+    transparent 70%
+  );
+  animation: loading-shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes loading-shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
 /* ---------- 表盘：发丝刻度与金色校准点 ---------- */
 
 .dial-ring {

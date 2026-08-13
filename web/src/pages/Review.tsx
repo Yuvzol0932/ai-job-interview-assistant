@@ -5,6 +5,11 @@ import { Card } from "../components/Card";
 import { PageHeader } from "../components/PageHeader";
 import { ProgressBar } from "../components/ProgressBar";
 import { api } from "../lib/api";
+import {
+  deleteLocalReport,
+  listLocalReportsMeta,
+  loadLocalReport,
+} from "../lib/localReports";
 import { useApp } from "../state/AppContext";
 import type { Report, ReportMeta } from "../types";
 
@@ -14,10 +19,20 @@ export function Review() {
   const [viewing, setViewing] = useState<Report | null>(null);
 
   const refresh = useCallback(() => {
+    const local = listLocalReportsMeta();
     api
       .listReports()
-      .then((res) => setReports(res.reports))
-      .catch(() => setReports([]));
+      .then((res) => {
+        const seen = new Set<string>();
+        setReports(
+          [...res.reports, ...local].filter((item) => {
+            if (seen.has(item.report_id)) return false;
+            seen.add(item.report_id);
+            return true;
+          }),
+        );
+      })
+      .catch(() => setReports(local));
   }, []);
 
   useEffect(() => {
@@ -28,13 +43,18 @@ export function Review() {
     try {
       setViewing(await api.loadReport(id));
     } catch {
-      setViewing(null);
+      setViewing(loadLocalReport(id));
     }
   }
 
   async function removeReport(id: string) {
     if (!window.confirm("确定删除这份复盘吗？删除后无法恢复。")) return;
-    await api.deleteReport(id);
+    try {
+      await api.deleteReport(id);
+    } catch {
+      /* 云端记录已失效时，仍允许删除本地副本 */
+    }
+    deleteLocalReport(id);
     if (viewing?.report_id === id) setViewing(null);
     refresh();
   }
@@ -54,7 +74,8 @@ export function Review() {
       ) : null}
 
       <section>
-        <h2 className="mb-4 text-lg font-bold text-ink">历史复盘</h2>
+        <h2 className="mb-1 text-lg font-bold text-ink">历史复盘</h2>
+        <p className="mb-4 text-xs text-muted">记录同时保存在本机浏览器，云端重置也不会丢失。</p>
         {reports.length === 0 ? (
           <Card className="text-center">
             <p className="text-muted">完成一次模拟面试并生成复盘后，这里会出现你的历史记录。</p>

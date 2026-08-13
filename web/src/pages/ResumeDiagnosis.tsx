@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
@@ -36,23 +36,37 @@ export function ResumeDiagnosis() {
   const [loading, setLoading] = useState(false);
   const [loadingStages, setLoadingStages] = useState<string[]>([]);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [loadingDone, setLoadingDone] = useState(false);
   const intervalRef = useRef<number | null>(null);
+  const doneTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) window.clearInterval(intervalRef.current);
+      if (doneTimerRef.current) window.clearTimeout(doneTimerRef.current);
+    };
+  }, []);
 
   function startLoading(stages: string[]) {
     setError("");
     setLoading(true);
+    setLoadingDone(false);
     setLoadingStages(stages);
     setLoadingStep(0);
     if (intervalRef.current) window.clearInterval(intervalRef.current);
+    if (doneTimerRef.current) window.clearTimeout(doneTimerRef.current);
     intervalRef.current = window.setInterval(() => {
       setLoadingStep((step) => Math.min(step + 1, stages.length - 1));
-    }, 900);
+    }, 3500);
   }
 
-  function stopLoading() {
+  function finishLoading() {
     if (intervalRef.current) window.clearInterval(intervalRef.current);
     intervalRef.current = null;
-    setLoading(false);
+    setLoadingDone(true);
+    doneTimerRef.current = window.setTimeout(() => {
+      setLoading(false);
+    }, 650);
   }
 
   async function parseCurrent(): Promise<string> {
@@ -90,7 +104,7 @@ export function ResumeDiagnosis() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "分析失败，请重试。");
     } finally {
-      stopLoading();
+      finishLoading();
     }
   }
 
@@ -104,7 +118,7 @@ export function ResumeDiagnosis() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "诊断失败，请重试。");
     } finally {
-      stopLoading();
+      finishLoading();
     }
   }
 
@@ -116,7 +130,7 @@ export function ResumeDiagnosis() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "诊断失败，请重试。");
     } finally {
-      stopLoading();
+      finishLoading();
     }
   }
 
@@ -140,7 +154,7 @@ export function ResumeDiagnosis() {
 
       {loading ? (
         <div className="mt-10">
-          <LoadingStage stages={loadingStages} current={loadingStep} />
+          <LoadingStage stages={loadingStages} current={loadingStep} done={loadingDone} />
         </div>
       ) : null}
 

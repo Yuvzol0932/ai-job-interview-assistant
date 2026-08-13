@@ -8,6 +8,7 @@ import { LoadingStage } from "../components/LoadingStage";
 import { PageHeader } from "../components/PageHeader";
 import { ProgressBar } from "../components/ProgressBar";
 import { api } from "../lib/api";
+import { saveLocalReport } from "../lib/localReports";
 import { useApp } from "../state/AppContext";
 import type { InterviewState } from "../types";
 
@@ -25,29 +26,43 @@ export function Interview() {
   const [loading, setLoading] = useState(false);
   const [loadingStages, setLoadingStages] = useState<string[]>([]);
   const [loadingStep, setLoadingStep] = useState(0);
+  const [loadingDone, setLoadingDone] = useState(false);
   const [error, setError] = useState("");
   const [answers, setAnswers] = useState({ main: "", followup: "" });
   const intervalRef = useRef<number | null>(null);
+  const doneTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     setAnswers({ main: "", followup: "" });
   }, [interviewState?.current_index, interviewState?.phase]);
 
+  useEffect(() => {
+    return () => {
+      if (intervalRef.current) window.clearInterval(intervalRef.current);
+      if (doneTimerRef.current) window.clearTimeout(doneTimerRef.current);
+    };
+  }, []);
+
   function startLoading(stages: string[]) {
     setError("");
     setLoading(true);
+    setLoadingDone(false);
     setLoadingStages(stages);
     setLoadingStep(0);
     if (intervalRef.current) window.clearInterval(intervalRef.current);
+    if (doneTimerRef.current) window.clearTimeout(doneTimerRef.current);
     intervalRef.current = window.setInterval(() => {
       setLoadingStep((step) => Math.min(step + 1, stages.length - 1));
-    }, 900);
+    }, 3500);
   }
 
-  function stopLoading() {
+  function finishLoading() {
     if (intervalRef.current) window.clearInterval(intervalRef.current);
     intervalRef.current = null;
-    setLoading(false);
+    setLoadingDone(true);
+    doneTimerRef.current = window.setTimeout(() => {
+      setLoading(false);
+    }, 650);
   }
 
   async function run<T>(fn: () => Promise<T>, stages: string[]) {
@@ -58,7 +73,7 @@ export function Interview() {
       setError(err instanceof Error ? err.message : "请求失败，请重试。");
       return null;
     } finally {
-      stopLoading();
+      finishLoading();
     }
   }
 
@@ -107,6 +122,7 @@ export function Interview() {
     if (!interviewState) return;
     const report = await run(() => api.generateReport(interviewState), REPORT_STAGES);
     if (report) {
+      saveLocalReport(report);
       setCurrentReport(report);
       setInterviewState(null);
       navigate("/review");
@@ -123,7 +139,9 @@ export function Interview() {
         caption="选择岗位方向，像真实面试官一样逐题问答；答完还可以被追问细节。"
       />
 
-      {loading ? <LoadingStage stages={loadingStages} current={loadingStep} /> : null}
+      {loading ? (
+        <LoadingStage stages={loadingStages} current={loadingStep} done={loadingDone} />
+      ) : null}
 
       {error ? (
         <div
