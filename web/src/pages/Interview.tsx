@@ -12,12 +12,14 @@ import { saveLocalReport } from "../lib/localReports";
 import { useApp } from "../state/AppContext";
 import type { InterviewState } from "../types";
 
-const START_STAGES = ["正在读取岗位信息…", "AI 正在出题…"];
-const FOLLOWUP_STAGES = ["AI 正在思考你的回答…", "正在生成追问…"];
+const START_STAGES = ["正在读取岗位信息…", "正在结合简历出题…", "正在排版面试问题…"];
+const FOLLOWUP_STAGES = ["正在回顾你的回答…", "正在找出可深挖的细节…", "正在生成追问…"];
 const REPORT_STAGES = [
-  "面试官正在翻看你的回答…",
-  "正在逐题点评…",
-  "正在写面试官手记…",
+  "面试官正在翻看全部问答记录…",
+  "正在逐题打分与点评…",
+  "正在起草面试官手记…",
+  "正在生成成长建议…",
+  "正在排版复盘报告…",
 ];
 
 export function Interview() {

@@ -13,11 +13,17 @@ import type { ClarificationItem, DiagnosisResult } from "../types";
 type Phase = "input" | "clarify" | "result";
 
 const STEPS = ["提交简历", "补充信息", "专属方案"];
-const CLARIFY_STAGES = ["正在读取简历…", "AI 正在找出没写清楚的地方…"];
+const CLARIFY_STAGES = [
+  "正在读取简历…",
+  "正在提取缺失的信息…",
+  "正在生成待确认清单…",
+];
 const DIAGNOSE_STAGES = [
   "正在整理你的简历与补充信息…",
   "正在逐项对照岗位要求…",
-  "AI 正在生成专属优化方案…",
+  "正在起草最优先修改建议…",
+  "正在生成当地市场提示…",
+  "正在排版专属优化方案…",
 ];
 
 export function ResumeDiagnosis() {
