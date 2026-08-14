@@ -8,6 +8,8 @@ def client(monkeypatch):
     monkeypatch.setenv("LLM_PROVIDER", "deepseek")
     monkeypatch.setenv("LLM_MODE", "mock")
     monkeypatch.setenv("LLM_API_KEY", "")
+    monkeypatch.setenv("JOB_RSS_SOURCES", "")
+    monkeypatch.setenv("JOB_REFRESH_TTL", "900")
 
     from fastapi.testclient import TestClient
 

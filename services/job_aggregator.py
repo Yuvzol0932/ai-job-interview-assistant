@@ -1,12 +1,17 @@
 """岗位聚合服务：本地种子数据 + 可选 RSS 源拉取 + 轻量缓存。"""
 
 import hashlib
+import html
 import json
 import os
+import re
+import time
 import xml.etree.ElementTree as ET
+from datetime import datetime, timezone
 from pathlib import Path
 
 import httpx
+from dotenv import dotenv_values
 
 from models.job import JobPosting
 
@@ -15,6 +20,8 @@ SEED_PATH = DATA_DIR / "jobs_seed.json"
 CACHE_PATH = DATA_DIR / "jobs_cache.json"
 REMOTE_SOURCE_ENV = "JOB_RSS_SOURCES"
 USER_AGENT = "AI-Job-Interview-Assistant/0.4 (+local demo; respectful crawler)"
+REFRESH_TTL_ENV = "JOB_REFRESH_TTL"
+REFRESH_TTL_DEFAULT = 900
 
 
 def _local_name(tag: str) -> str:
@@ -31,13 +38,22 @@ def _child_text(element, name: str) -> str:
 
 def _split_requirements(text: str) -> list[str]:
     """把一段岗位描述切成一到三条可展示的要求。"""
-    cleaned = text.replace("\r", " ").replace("\n", " ")
+    cleaned = _clean_text(text)
     pieces = []
     for part in cleaned.replace("；", "。").split("。"):
         part = part.strip()
         if part:
             pieces.append(part)
-    return pieces[:3] or ([cleaned.strip()] if cleaned.strip() else [])
+    return pieces[:3] or ([cleaned] if cleaned else [])
+
+
+def _clean_text(text: str) -> str:
+    """去掉 HTML 标签与 RSSHub 的分隔符，整理成可读文本。"""
+    text = html.unescape(text or "")
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"[>＞]{2,}", " ", text)
+    text = re.sub(r"\s+", " ", text)
+    return text.strip()
 
 
 def jobs_from_rss_xml(xml_text: str, source_label: str) -> list[JobPosting]:
@@ -48,7 +64,7 @@ def jobs_from_rss_xml(xml_text: str, source_label: str) -> list[JobPosting]:
     ]
     jobs = []
     for entry in entries:
-        title = _child_text(entry, "title")
+        title = _clean_text(_child_text(entry, "title"))
         link_node = next(
             (
                 child
@@ -61,9 +77,11 @@ def jobs_from_rss_xml(xml_text: str, source_label: str) -> list[JobPosting]:
             url = str(link_node.get("href", "")).strip() or (link_node.text or "").strip()
         else:
             url = ""
-        description = _child_text(entry, "description") or _child_text(
-            entry, "summary"
-        ) or _child_text(entry, "content")
+        description = _clean_text(
+            _child_text(entry, "description")
+            or _child_text(entry, "summary")
+            or _child_text(entry, "content")
+        )
         published = _child_text(entry, "pubDate") or _child_text(entry, "updated")
         if not title:
             continue
@@ -131,12 +149,24 @@ def _save_cache(jobs: list[JobPosting]) -> None:
     DATA_DIR.mkdir(parents=True, exist_ok=True)
     CACHE_PATH.write_text(
         json.dumps(
-            {"updated_at": "2026-08-14", "jobs": [job.to_dict() for job in jobs]},
+            {
+                "updated_at": datetime.now(timezone.utc).isoformat(),
+                "jobs": [job.to_dict() for job in jobs],
+            },
             ensure_ascii=False,
             indent=2,
         ),
         encoding="utf-8",
     )
+
+
+def _configured_sources() -> list[str]:
+    raw = os.getenv(REMOTE_SOURCE_ENV)
+    if raw is None:
+        env_file = Path(__file__).resolve().parents[1] / ".env"
+        raw = str((dotenv_values(env_file) or {}).get(REMOTE_SOURCE_ENV, "") or "")
+    raw = raw.strip()
+    return [part.strip() for part in raw.replace(";", ",").split(",") if part.strip()]
 
 
 def fetch_rss_jobs(url: str, timeout: float = 8.0) -> list[JobPosting]:
@@ -154,8 +184,7 @@ def fetch_rss_jobs(url: str, timeout: float = 8.0) -> list[JobPosting]:
 def refresh_remote_jobs(sources: list[str] | None = None) -> dict:
     """拉取配置的 RSS 源并合并缓存，返回刷新统计。"""
     if sources is None:
-        raw = os.getenv(REMOTE_SOURCE_ENV, "").strip()
-        sources = [part.strip() for part in raw.replace(";", ",").split(",") if part.strip()]
+        sources = _configured_sources()
     fetched: list[JobPosting] = []
     errors: list[str] = []
     for source in sources:
@@ -171,6 +200,23 @@ def refresh_remote_jobs(sources: list[str] | None = None) -> dict:
         "errors": errors,
         "total": len(load_jobs()),
     }
+
+
+def maybe_auto_refresh() -> None:
+    """缓存超过 TTL 时自动拉取 RSS 源；未配置源则直接跳过。"""
+    sources = _configured_sources()
+    if not sources:
+        return
+    try:
+        ttl = max(60, int(os.getenv(REFRESH_TTL_ENV, str(REFRESH_TTL_DEFAULT))))
+    except ValueError:
+        ttl = REFRESH_TTL_DEFAULT
+    try:
+        age = time.time() - CACHE_PATH.stat().st_mtime
+    except OSError:
+        age = None
+    if age is None or age >= ttl:
+        refresh_remote_jobs(sources)
 
 
 def filter_jobs(

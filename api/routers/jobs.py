@@ -8,6 +8,7 @@ from services.job_aggregator import (
     filter_jobs,
     job_filters,
     load_jobs,
+    maybe_auto_refresh,
     refresh_remote_jobs,
 )
 from services.job_matcher import match_jobs
@@ -30,6 +31,7 @@ def list_jobs(
     keyword: str = Query(default=""),
 ) -> dict:
     """返回岗位列表与筛选选项；无参数时返回全部。"""
+    maybe_auto_refresh()
     jobs = load_jobs()
     filtered = filter_jobs(jobs, category, location, keyword)
     return {
@@ -53,6 +55,7 @@ def match(req: JobMatchRequest, client=Depends(get_client)) -> dict:
     if not req.resume_text.strip():
         raise HTTPException(status_code=400, detail="简历内容为空，请先提交简历。")
     limit = max(1, min(req.limit, 20))
+    maybe_auto_refresh()
     return match_jobs(
         client,
         req.resume_text,

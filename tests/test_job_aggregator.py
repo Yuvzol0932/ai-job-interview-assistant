@@ -9,7 +9,7 @@ RSS_XML = """<?xml version="1.0" encoding="UTF-8"?>
     <item>
       <title>新媒体运营实习生</title>
       <link>https://example.com/jobs/1</link>
-      <description>负责公众号内容策划；每周到岗4天</description>
+      <description><p>负责公众号内容策划；每周到岗4天</p></description>
       <pubDate>2026-08-10</pubDate>
     </item>
   </channel>
@@ -50,3 +50,4 @@ def test_rss_xml_parsing():
     assert job.id.startswith("rss-")
     assert job.source == "rss"
     assert job.requirements
+    assert "<p>" not in " ".join(job.requirements)
