@@ -22,6 +22,102 @@ const REPORT_STAGES = [
   "正在排版复盘报告…",
 ];
 
+interface QuestionType {
+  label: string;
+  hint: string;
+}
+
+const QUESTION_TYPES: Record<string, QuestionType> = {
+  selfIntro: { label: "自我介绍", hint: "介绍背景、经历与岗位匹配点" },
+  jobCognition: { label: "岗位认知", hint: "考察你对岗位和公司的理解" },
+  behavioral: { label: "行为经历", hint: "用 STAR 讲一件具体经历" },
+  strengthsWeaknesses: { label: "优缺点", hint: "评价自己并举例说明" },
+  situational: { label: "情景应变", hint: "给出假设场景下的处理方式" },
+  career: { label: "职业规划", hint: "聊个人发展方向与稳定性" },
+  opinion: { label: "观点认知", hint: "表达对某个话题的看法" },
+  comprehensive: { label: "综合问答", hint: "综合考察表达能力与临场反应" },
+};
+
+function classifyQuestion(question: string, index: number): QuestionType {
+  const q = question.replace(/\s+/g, "");
+
+  if (/自我介绍|介绍.*自己/.test(q)) {
+    return QUESTION_TYPES.selfIntro;
+  }
+  if (/为什么选择|为什么想|应聘动机|选择我们|了解.*岗位|岗位.*理解|对这个岗位|工作内容|岗位职责|核心职责|核心能力|岗位要求|胜任|入职后/.test(q)) {
+    return QUESTION_TYPES.jobCognition;
+  }
+  if (/如果|假设|遇到.*怎么办|如何应对|怎么应对|如何处理|你会怎么|压力|加班|冲突|临时|紧急|突然/.test(q)) {
+    return QUESTION_TYPES.situational;
+  }
+  if (/你的?[^，。]{0,12}(优点|缺点|不足|短板|优势)|(优点|缺点|不足|短板).{0,8}(自己|你)|评价自己|性格/.test(q)) {
+    return QUESTION_TYPES.strengthsWeaknesses;
+  }
+  if (/分享一次|举例|经历|项目|实习|团队|做过|完成过|遇到.*困难|解决.*分歧|最难忘|最有成就感|失败/.test(q)) {
+    return QUESTION_TYPES.behavioral;
+  }
+  if (/职业规划|未来.*年|发展目标|长期规划|期望薪资|薪资/.test(q)) {
+    return QUESTION_TYPES.career;
+  }
+  if (/如何看待|你怎么看|怎么看|你的理解|你如何理解|谈谈.*看法|对.*认识/.test(q)) {
+    return QUESTION_TYPES.opinion;
+  }
+
+  return index === 0 ? QUESTION_TYPES.selfIntro : QUESTION_TYPES.comprehensive;
+}
+
+function QuestionRoadmap({ state }: { state: InterviewState }) {
+  const futureQuestions = state.questions.slice(state.current_index + 1);
+  const remainingCount = futureQuestions.length;
+
+  if (remainingCount === 0) {
+    return (
+      <motion.p
+        key={`last-${state.current_index}`}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        className="mt-6 text-xs text-muted"
+      >
+        这是最后一题，答完即可结束。
+      </motion.p>
+    );
+  }
+
+  return (
+    <section aria-label="后续题型预览" className="mt-8">
+      <div className="hairline-gold" />
+      <div className="mt-4 flex items-baseline gap-3">
+        <p className="shrink-0 text-xs font-medium text-muted">后续 {remainingCount} 题</p>
+        <div className="flex min-w-0 flex-1 flex-wrap gap-2">
+          {futureQuestions.map((question, offset) => {
+            const type = classifyQuestion(
+              question,
+              state.current_index + offset + 1,
+            );
+            return (
+              <motion.span
+                key={`${state.current_index}-${offset}-${type.label}`}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{
+                  duration: 0.35,
+                  delay: offset * 0.06,
+                  ease: [0.16, 1, 0.3, 1],
+                }}
+                title={type.hint}
+                className="rounded-full border border-line bg-porcelain px-2.5 py-0.5 text-xs text-muted"
+              >
+                {offset + 1} · {type.label}
+              </motion.span>
+            );
+          })}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 export function Interview() {
   const { resumeText, interviewState, setInterviewState, setCurrentReport } = useApp();
   const navigate = useNavigate();
@@ -337,6 +433,9 @@ function QuestionView({
 }: QuestionViewProps) {
   const questionNumber = state.current_index + 1;
   const isFollowUp = state.phase === "followup" || state.phase === "answered_followup";
+  const currentType = isFollowUp
+    ? { label: "面试官追问", hint: "围绕当前回答深挖细节" }
+    : classifyQuestion(state.current_question, state.current_index);
 
   return (
     <motion.div
@@ -361,11 +460,19 @@ function QuestionView({
       />
 
       <Card>
-        <p className="text-sm font-semibold text-muted">
-          {isFollowUp
-            ? `第 ${questionNumber} 题 · 面试官追问`
-            : `第 ${questionNumber} 题 / 共 ${state.total} 题`}
-        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-semibold text-muted">
+            {isFollowUp
+              ? `第 ${questionNumber} 题 · 面试官追问`
+              : `第 ${questionNumber} 题 / 共 ${state.total} 题`}
+          </p>
+          <span
+            title={currentType.hint}
+            className="rounded-full bg-fog px-2.5 py-0.5 text-xs font-semibold text-blue-deep"
+          >
+            {currentType.label}
+          </span>
+        </div>
         <p className="mt-3 text-lg font-medium leading-relaxed text-ink">
           {isFollowUp ? state.current_follow_up_question : state.current_question}
         </p>
@@ -415,6 +522,8 @@ function QuestionView({
           <Button onClick={onNext}>下一题</Button>
         </div>
       ) : null}
+
+      <QuestionRoadmap state={state} />
     </motion.div>
   );
 }
