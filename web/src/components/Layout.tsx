@@ -5,6 +5,7 @@ import { api } from "../lib/api";
 const navItems = [
   { to: "/", label: "首页" },
   { to: "/resume", label: "简历诊断" },
+  { to: "/jobs", label: "企业招聘" },
   { to: "/interview", label: "模拟面试" },
   { to: "/review", label: "面试复盘" },
 ];

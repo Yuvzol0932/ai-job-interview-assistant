@@ -1,6 +1,8 @@
 import type {
   ClarificationItem,
   DiagnosisResult,
+  JobFeedResponse,
+  JobMatchResponse,
   InterviewState,
   Report,
   ReportMeta,
@@ -42,7 +44,28 @@ function json(method: string, body: unknown): RequestInit {
 export const api = {
   health: () => request<{ status: string }>("/health"),
 
-  jobs: () => request<{ labels: string[] }>("/jobs"),
+  jobLabels: () => request<{ labels: string[] }>("/jobs/labels"),
+
+  jobs: (params?: { category?: string; location?: string; keyword?: string }) => {
+    const query = new URLSearchParams();
+    if (params?.category) query.set("category", params.category);
+    if (params?.location) query.set("location", params.location);
+    if (params?.keyword) query.set("keyword", params.keyword);
+    const suffix = query.toString() ? `?${query.toString()}` : "";
+    return request<JobFeedResponse>(`/jobs${suffix}`);
+  },
+
+  matchJobs: (payload: {
+    resume_text: string;
+    target_job: string;
+    target_location: string;
+    limit?: number;
+  }) => request<JobMatchResponse>("/jobs/match", json("POST", payload)),
+
+  refreshJobs: () =>
+    request<{ fetched: number; errors: string[]; total: number }>("/jobs/refresh", {
+      method: "POST",
+    }),
 
   parseText: (text: string) =>
     request<ResumeParseResult>("/resume/parse", {

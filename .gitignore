@@ -12,6 +12,9 @@ venv/
 data/reports/*
 !data/reports/.gitkeep
 
+# 岗位缓存（由 RSS 源刷新时生成）
+data/jobs_cache.json
+
 # 测试与工具缓存
 .pytest_cache/
 .playwright-cli/

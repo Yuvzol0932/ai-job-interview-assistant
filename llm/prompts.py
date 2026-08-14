@@ -1,6 +1,7 @@
 """各功能的提示词模板与模拟回复。"""
 
 import json
+import re
 
 SYSTEM_DIAGNOSIS = """你是资深人力资源专家与职业规划师，擅长结合岗位要求与当地就业市场做简历诊断。请根据用户提供的简历内容、补充信息、目标岗位/地点和市场信息，输出客观、具体、可执行的专属优化方案。
 要求：
@@ -31,6 +32,14 @@ SYSTEM_REPORT = """你是资深面试官，刚刚完成一场模拟面试。现�
 7. growth_advice 给出 3-5 条具体可执行的提升建议，像导师给的建议。
 8. closing 是一句收尾，像面试结束时的鼓励，简短自然。
 9. 全程不得出现"作为AI""模型生成"等字样，也不得空泛表扬。"""
+
+SYSTEM_JOB_MATCH = """你是校园招聘岗位匹配顾问。请根据候选人简历与候选岗位，为每个岗位输出匹配评分。
+要求：
+1. 只输出一个 JSON 对象：{"results": [{"id": "岗位ID", "score": 0-100, "reasons": ["原因"], "gaps": ["差距"]}]}。
+2. score 代表当前简历投递该岗位的匹配度，依据岗位方向、地点、技能与经验综合判断。
+3. reasons 给 2-3 条，必须结合简历中的具体信息；gaps 给 1-2 条，指出简历里尚未体现的岗位要求。
+4. 结果按 score 从高到低排序。
+5. 严禁虚构简历中不存在的经历与技能。"""
 
 
 def build_diagnosis_messages(
@@ -124,6 +133,36 @@ def build_report_messages(
     return [
         {"role": "system", "content": SYSTEM_REPORT},
         {"role": "user", "content": user},
+    ]
+
+
+def build_job_match_messages(
+    resume_text: str,
+    target_job: str,
+    target_location: str,
+    jobs: list[dict],
+) -> list[dict]:
+    """把简历与候选岗位打包成岗位匹配提示词。"""
+    lines = []
+    if target_job and target_job.strip():
+        lines.append(f"目标岗位：{target_job}")
+    if target_location and target_location.strip():
+        lines.append(f"期望工作地点：{target_location}")
+    lines.append("简历内容：")
+    lines.append(resume_text)
+    lines.append("候选岗位：")
+    for index, job in enumerate(jobs, start=1):
+        requirements = "；".join(job.get("requirements") or []) or "未提供"
+        tags = "、".join(job.get("tags") or []) or "未提供"
+        lines.append(
+            f"{index}. id={job.get('id', '')} | {job.get('title', '')} | "
+            f"{job.get('company', '')} | {job.get('category', '')} | "
+            f"{job.get('location', '')} | {job.get('salary', '')} | "
+            f"要求：{requirements} | 关键词：{tags}"
+        )
+    return [
+        {"role": "system", "content": SYSTEM_JOB_MATCH},
+        {"role": "user", "content": "\n".join(lines)},
     ]
 
 
@@ -289,3 +328,26 @@ def mock_report_response(messages: list[dict]) -> str:
         },
         ensure_ascii=False,
     )
+
+
+def mock_job_match_response(messages: list[dict]) -> str:
+    user = messages[-1]["content"]
+    ids = re.findall(r"id=([A-Za-z0-9_-]+)", user)
+    scores = [82, 74, 66, 58, 50, 44]
+    results = []
+    for index, job_id in enumerate(ids[:6]):
+        score = scores[index] if index < len(scores) else 45
+        results.append(
+            {
+                "id": job_id,
+                "score": score,
+                "reasons": [
+                    "岗位方向与你的求职目标相关",
+                    "简历中有对应岗位的关键词与经历",
+                ],
+                "gaps": [
+                    "岗位要求中的部分技能未在简历中明确体现",
+                ],
+            }
+        )
+    return json.dumps({"results": results}, ensure_ascii=False)

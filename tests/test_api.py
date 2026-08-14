@@ -26,8 +26,35 @@ RESUME_TEXT = (
 
 def test_health_and_jobs(client):
     assert client.get("/api/health").json()["status"] == "ok"
-    labels = client.get("/api/jobs").json()["labels"]
+    labels = client.get("/api/jobs/labels").json()["labels"]
     assert "产品经理" in labels and "自定义岗位" in labels
+    feed = client.get("/api/jobs").json()
+    assert feed["total"] >= 30
+    assert "产品经理" in feed["filters"]["categories"]
+    assert "青岛" in feed["filters"]["locations"]
+
+
+def test_job_match_and_refresh(client):
+    matched = client.post(
+        "/api/jobs/match",
+        json={
+            "resume_text": RESUME_TEXT,
+            "target_job": "市场营销",
+            "target_location": "青岛",
+            "limit": 5,
+        },
+    )
+    assert matched.status_code == 200
+    payload = matched.json()
+    assert payload["jobs"]
+    assert all("match_score" in item for item in payload["jobs"])
+
+    empty = client.post("/api/jobs/match", json={"resume_text": ""})
+    assert empty.status_code == 400
+
+    refreshed = client.post("/api/jobs/refresh")
+    assert refreshed.status_code == 200
+    assert refreshed.json()["total"] >= 30
 
 
 def test_parse_text_and_errors(client):

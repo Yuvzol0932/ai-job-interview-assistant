@@ -7,8 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from api.routers import interview, reports, resume
-from services.job_catalog import job_labels
+from api.routers import interview, jobs, reports, resume
 
 app = FastAPI(title="AI 求职面试助手 API", version="0.3")
 
@@ -26,6 +25,7 @@ app.add_middleware(
 )
 
 app.include_router(resume.router)
+app.include_router(jobs.router)
 app.include_router(interview.router)
 app.include_router(reports.router)
 
@@ -38,11 +38,6 @@ async def unhandled_exception(request: Request, exc: Exception) -> JSONResponse:
 @app.get("/api/health")
 def health() -> dict:
     return {"status": "ok"}
-
-
-@app.get("/api/jobs")
-def jobs() -> dict:
-    return {"labels": job_labels()}
 
 
 # 生产模式：若前端已构建（web/dist 存在），由同一个服务托管页面与 API

@@ -72,3 +72,46 @@ export interface ReportMeta {
   job_label: string;
   total_score: number;
 }
+
+export interface JobPosting {
+  id: string;
+  title: string;
+  company: string;
+  category: string;
+  location: string;
+  salary: string;
+  education: string;
+  experience: string;
+  requirements: string[];
+  description: string;
+  tags: string[];
+  source: string;
+  source_label: string;
+  url: string;
+  posted_at: string;
+  deadline: string;
+}
+
+export interface MatchedJob extends JobPosting {
+  match_score: number;
+  match_reasons: string[];
+  gap_hints: string[];
+}
+
+export interface JobFilters {
+  categories: string[];
+  locations: string[];
+  sources: string[];
+}
+
+export interface JobFeedResponse {
+  jobs: JobPosting[];
+  filters: JobFilters;
+  total: number;
+  updated_at: string;
+}
+
+export interface JobMatchResponse {
+  jobs: MatchedJob[];
+  strategy: "rules" | "llm";
+}

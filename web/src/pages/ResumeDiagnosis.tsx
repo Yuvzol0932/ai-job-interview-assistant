@@ -3,12 +3,13 @@ import { motion } from "framer-motion";
 import { Button } from "../components/Button";
 import { Card } from "../components/Card";
 import { Field } from "../components/Field";
+import { JobCard } from "../components/JobCard";
 import { LoadingStage } from "../components/LoadingStage";
 import { PageHeader } from "../components/PageHeader";
 import { StepIndicator } from "../components/StepIndicator";
 import { api } from "../lib/api";
 import { useApp } from "../state/AppContext";
-import type { ClarificationItem, DiagnosisResult } from "../types";
+import type { ClarificationItem, DiagnosisResult, MatchedJob } from "../types";
 
 type Phase = "input" | "clarify" | "result";
 
@@ -38,6 +39,9 @@ export function ResumeDiagnosis() {
   const [marketNotes, setMarketNotes] = useState("");
   const [items, setItems] = useState<ClarificationItem[]>([]);
   const [result, setResult] = useState<DiagnosisResult | null>(null);
+  const [matchedJobs, setMatchedJobs] = useState<MatchedJob[]>([]);
+  const [matchLoading, setMatchLoading] = useState(false);
+  const [matchError, setMatchError] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [loadingStages, setLoadingStages] = useState<string[]>([]);
@@ -96,6 +100,22 @@ export function ResumeDiagnosis() {
     });
     setResult(res);
     setPhase("result");
+    setMatchedJobs([]);
+    setMatchError("");
+    setMatchLoading(true);
+    try {
+      const matched = await api.matchJobs({
+        resume_text: resumeText,
+        target_job: targetJob,
+        target_location: targetLocation,
+        limit: 6,
+      });
+      setMatchedJobs(matched.jobs);
+    } catch (err) {
+      setMatchError(err instanceof Error ? err.message : "岗位匹配失败，请稍后重试。");
+    } finally {
+      setMatchLoading(false);
+    }
   }
 
   async function handleAnalyze() {
@@ -147,6 +167,9 @@ export function ResumeDiagnosis() {
     setResumeContent("");
     setItems([]);
     setResult(null);
+    setMatchedJobs([]);
+    setMatchLoading(false);
+    setMatchError("");
     setError("");
   }
 
@@ -312,12 +335,32 @@ export function ResumeDiagnosis() {
         </motion.div>
       ) : null}
 
-      {!loading && phase === "result" && result ? <ResultView result={result} onReset={reset} /> : null}
+      {!loading && phase === "result" && result ? (
+        <ResultView
+          result={result}
+          onReset={reset}
+          matchedJobs={matchedJobs}
+          matchLoading={matchLoading}
+          matchError={matchError}
+        />
+      ) : null}
     </div>
   );
 }
 
-function ResultView({ result, onReset }: { result: DiagnosisResult; onReset: () => void }) {
+function ResultView({
+  result,
+  onReset,
+  matchedJobs,
+  matchLoading,
+  matchError,
+}: {
+  result: DiagnosisResult;
+  onReset: () => void;
+  matchedJobs: MatchedJob[];
+  matchLoading: boolean;
+  matchError: string;
+}) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -386,6 +429,12 @@ function ResultView({ result, onReset }: { result: DiagnosisResult; onReset: () 
         </Card>
       ) : null}
 
+      <MatchedJobsSection
+        jobs={matchedJobs}
+        loading={matchLoading}
+        error={matchError}
+      />
+
       <div className="grid gap-5 md:grid-cols-2">
         <Card>
           <h2 className="font-bold text-ink">优势</h2>
@@ -432,5 +481,39 @@ function ResultView({ result, onReset }: { result: DiagnosisResult; onReset: () 
 
       <Button onClick={onReset}>再来一份</Button>
     </motion.div>
+  );
+}
+
+function MatchedJobsSection({
+  jobs,
+  loading,
+  error,
+}: {
+  jobs: MatchedJob[];
+  loading: boolean;
+  error: string;
+}) {
+  return (
+    <Card>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="font-bold text-ink">可投递岗位</h2>
+        {loading ? <span className="text-xs text-muted">正在匹配岗位…</span> : null}
+      </div>
+      {error ? (
+        <p role="alert" className="mt-2 text-sm text-red-700">
+          {error}
+        </p>
+      ) : null}
+      {!loading && jobs.length ? (
+        <div className="mt-4 grid gap-4 md:grid-cols-2">
+          {jobs.map((job) => (
+            <JobCard key={job.id} job={job} />
+          ))}
+        </div>
+      ) : null}
+      {!loading && !error && !jobs.length ? (
+        <p className="mt-2 text-sm text-muted">暂无匹配岗位，可稍后在企业招聘页浏览。</p>
+      ) : null}
+    </Card>
   );
 }

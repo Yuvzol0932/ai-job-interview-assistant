@@ -8,6 +8,7 @@
 ## 功能
 
 - **简历诊断**：粘贴文本或上传 PDF / Word 简历，AI 给出整体评价、优势、不足、修改建议和优化示例。
+- **企业招聘**：内置 30+ 条校园岗位演示数据，支持按方向、城市、关键词筛选；简历诊断结果下方自动展示可投递岗位与匹配理由。可配置 `JOB_RSS_SOURCES` 拉取公众号转 RSS / 就业网站 RSS 源。
 - **模拟面试**：选择岗位方向（产品经理、市场营销、运营、财务、人力资源、行政文秘、通用管培生或自定义），AI 逐题提问并记录你的回答。
 - **面试报告**：按五个维度打分（内容准确性、逻辑条理、表达清晰度、岗位匹配度、临场应变），附亮点、短板、参考回答和提升建议；报告自动保存在本地可回看。
 
@@ -78,7 +79,8 @@ data/reports/ 本地报告存储（不入库）
 - `POST /api/resume/diagnose` 生成专属优化方案
 - `POST /api/interview/start|answer|followup|followup-answer|next|finish` 面试状态机（状态快照往返）
 - `POST /api/reports/generate`、`GET/DELETE /api/reports[/{id}]` 复盘生成与本地历史
-- `GET /api/health`、`GET /api/jobs` 健康检查与岗位目录
+- `GET /api/jobs`、`POST /api/jobs/match`、`POST /api/jobs/refresh` 岗位列表、简历匹配与 RSS 拉取
+- `GET /api/jobs/labels`、`GET /api/health` 岗位方向常量与健康检查
 
 ## 隐私说明
 

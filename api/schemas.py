@@ -15,6 +15,13 @@ class DiagnoseRequest(BaseModel):
     target_location: str = ""
 
 
+class JobMatchRequest(BaseModel):
+    resume_text: str
+    target_job: str = ""
+    target_location: str = ""
+    limit: int = 8
+
+
 class InterviewStartRequest(BaseModel):
     job_label: str
     num_questions: int = 5

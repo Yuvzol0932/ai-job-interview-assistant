@@ -210,7 +210,7 @@ function Setup({
 
   useEffect(() => {
     api
-      .jobs()
+      .jobLabels()
       .then((res) => {
         setJobs(res.labels);
         setJob(res.labels[0] ?? "");
