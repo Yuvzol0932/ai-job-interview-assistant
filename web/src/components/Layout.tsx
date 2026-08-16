@@ -28,40 +28,12 @@ export function Layout() {
     <div className="relative min-h-screen">
       <div className="app-bg" aria-hidden="true" />
       <header className="glass-header">
-        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 lg:px-8">
+        <div className="mx-auto flex w-full max-w-6xl flex-wrap items-center gap-x-4 gap-y-3 px-4 py-3 sm:px-6 lg:px-8">
           <NavLink to="/" className="text-lg font-extrabold tracking-tight text-ink">
             AI 求职面试助手
           </NavLink>
-          <nav className="flex items-center gap-1">
-            {navItems.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.to === "/"}
-                className={({ isActive }) =>
-                  `relative rounded-full px-3 py-1.5 text-sm font-semibold transition-colors duration-150 sm:px-4 ${
-                    isActive
-                      ? "bg-fog text-blue"
-                      : "text-muted hover:bg-fog/60 hover:text-blue"
-                  }`
-                }
-              >
-                {({ isActive }) => (
-                  <>
-                    {item.label}
-                    {isActive ? (
-                      <span
-                        className="absolute inset-x-3 -bottom-0.5 h-px bg-gold"
-                        aria-hidden="true"
-                      />
-                    ) : null}
-                  </>
-                )}
-              </NavLink>
-            ))}
-          </nav>
           <div
-            className={`flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
+            className={`ml-auto flex items-center gap-2 rounded-full border px-3 py-1 text-xs font-medium ${
               online === null
                 ? "border-gold/30 bg-gold-soft text-gold"
                 : online
@@ -80,6 +52,40 @@ export function Layout() {
               : online
                 ? "服务已连接"
                 : "服务未连接，请先启动后端"}
+          </div>
+          <div className="relative order-last w-full sm:order-none sm:w-auto sm:flex-1 sm:flex sm:justify-center">
+            <nav className="-mx-4 flex items-center gap-1 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:justify-center sm:overflow-visible sm:px-0 sm:pb-0">
+              {navItems.map((item) => (
+                <NavLink
+                  key={item.to}
+                  to={item.to}
+                  end={item.to === "/"}
+                  className={({ isActive }) =>
+                    `relative shrink-0 whitespace-nowrap rounded-full px-3 py-1.5 text-sm font-semibold transition-colors duration-150 sm:px-4 ${
+                      isActive
+                        ? "bg-fog text-blue"
+                        : "text-muted hover:bg-fog/60 hover:text-blue"
+                    }`
+                  }
+                >
+                  {({ isActive }) => (
+                    <>
+                      {item.label}
+                      {isActive ? (
+                        <span
+                          className="absolute inset-x-3 -bottom-0.5 h-px bg-gold"
+                          aria-hidden="true"
+                        />
+                      ) : null}
+                    </>
+                  )}
+                </NavLink>
+              ))}
+            </nav>
+            <div
+              aria-hidden="true"
+              className="pointer-events-none absolute inset-y-0 right-0 w-8 bg-linear-to-r from-transparent to-porcelain sm:hidden"
+            />
           </div>
         </div>
       </header>
